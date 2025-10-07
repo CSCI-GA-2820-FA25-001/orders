@@ -15,16 +15,18 @@
 ######################################################################
 
 """
-Test cases for Pet Model
+Test cases for OrderItem Model
 """
 
 # pylint: disable=duplicate-code
-import os
+
 import logging
+import os
 from unittest import TestCase
+from unittest.mock import patch
 from wsgi import app
-from service.models import YourResourceModel, DataValidationError, db
-from .factories import YourResourceModelFactory
+from service.models import Order, OrderItem, DataValidationError, db
+from tests.factories import OrderFactory, OrderItemFactory
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
@@ -32,11 +34,13 @@ DATABASE_URI = os.getenv(
 
 
 ######################################################################
-#  YourResourceModel   M O D E L   T E S T   C A S E S
+#  O R D E R I T E M   M O D E L   T E S T   C A S E S
 ######################################################################
 # pylint: disable=too-many-public-methods
-class TestYourResourceModel(TestCase):
-    """Test Cases for YourResourceModel Model"""
+
+
+class TestOrder(TestCase):
+    """OrderItem Model Test Cases"""
 
     @classmethod
     def setUpClass(cls):
@@ -54,7 +58,8 @@ class TestYourResourceModel(TestCase):
 
     def setUp(self):
         """This runs before each test"""
-        db.session.query(YourResourceModel).delete()  # clean up the last tests
+        db.session.query(Order).delete()  # clean up the last tests
+        db.session.query(OrderItem).delete()  # clean up the last tests
         db.session.commit()
 
     def tearDown(self):
@@ -65,15 +70,38 @@ class TestYourResourceModel(TestCase):
     #  T E S T   C A S E S
     ######################################################################
 
-    def test_example_replace_this(self):
-        """It should create a YourResourceModel"""
-        # Todo: Remove this test case example
-        resource = YourResourceModelFactory()
-        resource.create()
-        self.assertIsNotNone(resource.id)
-        found = YourResourceModel.all()
-        self.assertEqual(len(found), 1)
-        data = YourResourceModel.find(resource.id)
-        self.assertEqual(data.name, resource.name)
+    def test_add_order_orderitem(self):
+        """It should Create an order with an orderitem and add it to the database"""
+        orders = Order.all()
+        self.assertEqual(orders, [])
+        order = OrderFactory()
+        orderitem = OrderItemFactory(order=order)
+        order.orderitem.append(orderitem)
+        order.create()
+        # Assert that it was assigned an id and shows up in the database
+        self.assertIsNotNone(order.id)
+        orders = Order.all()
+        self.assertEqual(len(orders), 1)
 
-    # Todo: Add your test cases here...
+        new_order = Order.find(order.id)
+        self.assertEqual(new_order.orderitem[0].product_id, orderitem.product_id)
+
+        orderitem2 = OrderItemFactory(order=order)
+        order.orderitem.append(orderitem2)
+        order.update()
+
+        new_order = Order.find(order.id)
+        self.assertEqual(len(new_order.orderitem), 2)
+        self.assertEqual(new_order.orderitem[1].product_id, orderitem2.product_id)
+
+    def test_line_amount_computed(self):
+        "It should compute line_amount as price multiplied by quantity for an OrderItem"
+
+        order = OrderFactory()
+        orderitem = OrderItemFactory(order=order, price="12.50", quantity=3)
+
+        order.create()
+
+        fresh = Order.find(order.id)
+        self.assertEqual(len(fresh.orderitem), 1)
+        self.assertEqual(str(fresh.orderitem[0].line_amount), "37.50")  # 12.50 * 3

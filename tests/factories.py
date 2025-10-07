@@ -2,19 +2,51 @@
 Test Factory to make fake objects for testing
 """
 
-import factory
-from service.models import YourResourceModel
+from factory import Factory, SubFactory, Sequence, post_generation
+from factory.fuzzy import FuzzyChoice, FuzzyInteger, FuzzyDecimal
+from service.models import Order, OrderItem, Status
 
 
-class YourResourceModelFactory(factory.Factory):
-    """Creates fake pets that you don't have to feed"""
+class OrderFactory(Factory):
+    """Creates fake Orders"""
 
-    class Meta:  # pylint: disable=too-few-public-methods
-        """Maps factory to data model"""
+    # pylint: disable=too-few-public-methods
+    class Meta:
+        """Persistent class"""
 
-        model = YourResourceModel
+        model = Order
 
-    id = factory.Sequence(lambda n: n)
-    name = factory.Faker("first_name")
+    id = Sequence(lambda n: n)
+    customer_id = Sequence(lambda n: f"User{n:04d}")
+    status = FuzzyChoice([i for i in Status])
 
-    # Todo: Add your other attributes here...
+    # the many side of relationships can be a little wonky in factory boy:
+    # https://factoryboy.readthedocs.io/en/latest/recipes.html#simple-many-to-many-relationship
+
+    @post_generation
+    def orderitem(
+        self, create, extracted, **kwargs
+    ):  # pylint: disable=method-hidden, unused-argument
+        """Creates the orderitem list"""
+        if not create:
+            return
+
+        if extracted:
+            self.orderitem = extracted
+
+
+class OrderItemFactory(Factory):
+    """Creates fake OrderItems"""
+
+    # pylint: disable=too-few-public-methods
+    class Meta:
+        """Persistent class"""
+
+        model = OrderItem
+
+    id = Sequence(lambda n: n)
+    order_id = None
+    product_id = Sequence(lambda n: f"SKU{n:05d}")
+    price = FuzzyDecimal(0, 100, precision=2)
+    quantity = FuzzyInteger(1, 100)
+    order = SubFactory(OrderFactory)

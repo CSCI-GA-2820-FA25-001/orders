@@ -1,0 +1,99 @@
+######################################################################
+# Copyright 2016, 2024 John J. Rofrano. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+######################################################################
+
+"""
+Test cases for Order Model
+"""
+
+# pylint: disable=duplicate-code
+
+import logging
+import os
+from unittest import TestCase
+from unittest.mock import patch
+from wsgi import app
+from service.models import Order, OrderItem, DataValidationError, db
+from tests.factories import OrderFactory, OrderItemFactory
+
+DATABASE_URI = os.getenv(
+    "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
+)
+
+
+######################################################################
+#  O R D E R   M O D E L   T E S T   C A S E S
+######################################################################
+# pylint: disable=too-many-public-methods
+
+
+class TestOrder(TestCase):
+    """Order Model Test Cases"""
+
+    @classmethod
+    def setUpClass(cls):
+        """This runs once before the entire test suite"""
+        app.config["TESTING"] = True
+        app.config["DEBUG"] = False
+        app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
+        app.logger.setLevel(logging.CRITICAL)
+        app.app_context().push()
+
+    @classmethod
+    def tearDownClass(cls):
+        """This runs once after the entire test suite"""
+        db.session.close()
+
+    def setUp(self):
+        """This runs before each test"""
+        db.session.query(Order).delete()  # clean up the last tests
+        db.session.query(OrderItem).delete()  # clean up the last tests
+        db.session.commit()
+
+    def tearDown(self):
+        """This runs after each test"""
+        db.session.remove()
+
+    ######################################################################
+    #  T E S T   C A S E S
+    ######################################################################
+
+    def test_create_an_order(self):
+        """It should Create an Order and assert that it exists"""
+        fake_order = OrderFactory()
+        # pylint: disable=unexpected-keyword-arg
+        order = Order(
+            customer_id=fake_order.customer_id,
+            status=fake_order.status,
+        )
+        self.assertIsNotNone(order)
+        self.assertEqual(order.id, None)
+        self.assertEqual(order.customer_id, fake_order.customer_id)
+        self.assertEqual(order.status, fake_order.status)
+        self.assertEqual(order.orderitem, [])
+
+    def test_total_amount_computed(self):
+        """It should compute an Order's total_amount as the sum of all item line_amount values"""
+        order = OrderFactory()
+
+        OrderItemFactory(order=order, product_id="A", price="10.00", quantity=1)
+        OrderItemFactory(order=order, product_id="B", price="2.50", quantity=3)
+        OrderItemFactory(order=order, product_id="C", price="0.99", quantity=2)
+
+        order.create()
+
+        fresh = Order.find(order.id)
+        self.assertEqual(len(fresh.orderitem), 3)
+        self.assertEqual(str(fresh.total_amount), "19.48")
