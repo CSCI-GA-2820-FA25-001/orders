@@ -145,7 +145,7 @@ class Order(db.Model, PersistentBase):
         return cls.query.session.get(cls, by_id)
 
     @classmethod
-    def find_by_name(cls, customer_id):
+    def find_by_customer_id(cls, customer_id):
         """Returns all Orders with the given customer_id
 
         Args:
