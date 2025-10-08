@@ -110,5 +110,5 @@ class OrderItem(db.Model, PersistentBase):
         Args:
             order_id (string): the id of the Order you want to match
         """
-        logger.info("Processing name query for %s ...", order_id)
+        logger.info("Processing order_id query for %s ...", order_id)
         return cls.query.filter(cls.order_id == order_id).all()
