@@ -71,6 +71,8 @@ class Order(db.Model, PersistentBase):
             "customer_id": self.customer_id,
             "status": self.status.name,
             "total_amount": str(self.total_amount),
+            "created_at": self.created_at.isoformat(),
+            "updated_at": self.updated_at.isoformat(),
             "orderitem": [],
         }
 
