@@ -151,5 +151,5 @@ class Order(db.Model, PersistentBase):
         Args:
             customer_id (string): the id of the customer you want to match
         """
-        logger.info("Processing name query for %s ...", customer_id)
+        logger.info("Processing customer_id query for %s ...", customer_id)
         return cls.query.filter(cls.customer_id == customer_id).all()
