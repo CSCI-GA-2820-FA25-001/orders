@@ -26,7 +26,7 @@ from service.common import status  # HTTP Status Codes
 from service.models import db, Order, OrderItem, Status
 
 DATABASE_URI = os.getenv(
-    "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/postgres"
+    "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
 )
 
 BASE_URL = "/orders"
