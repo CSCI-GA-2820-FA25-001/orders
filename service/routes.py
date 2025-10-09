@@ -45,6 +45,24 @@ def index():
             name="Order REST API Service",
             version="1.0",
             paths=url_for("list_orders", _external=True),
+            endpoints={
+                "orders": {
+                    "list": {"method": "GET", "url": "/orders"},
+                    # Todo: uncomment once the endpoint is implemented and tested
+                    #                "create": {"method":"POST", "url": "/orders"},
+                    #                "get":    {"method": "GET", "url": "/orders/<int:order_id>"},
+                    #                "update": {"method": "PUT", "url": "/orders/<int:order_id>"},
+                    #                "delete": {"method": "DELETE", "url": "/orders/<int:order_id>"}
+                },
+                "order_items": {
+                    # Todo: uncomment once the endpoint is implemented and tested
+                    #                "list":   {"method": "GET","url": "/orders/<int:order_id>/items"},
+                    #                "create": {"method": "POST", "url": "/orders/<int:order_id>/items"},
+                    #                "get":    {"method": "GET", "url": "/orders/<int:order_id>/items/<int:item_id>"},
+                    #                "update": {"method": "PUT", "url": "/orders/<int:order_id>/items/<int:item_id>"},
+                    #                "delete": {"method": "DELETE", "url": "/orders/<int:order_id>/items/<int:item_id>"}
+                },
+            },
         ),
         status.HTTP_200_OK,
     )
