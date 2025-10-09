@@ -15,16 +15,23 @@
 ######################################################################
 
 """
-YourResourceModel Service
+Order and OrderItem Service
 
-This service implements a REST API that allows you to Create, Read, Update
-and Delete YourResourceModel
+This microservice handles the lifecycle of Orders and OrderItems
 """
-
 from flask import jsonify, request, url_for, abort
 from flask import current_app as app  # Import Flask application
-from service.models import YourResourceModel
+from service.models import Order, OrderItem, Status
 from service.common import status  # HTTP Status Codes
+
+
+######################################################################
+# GET HEALTH CHECK
+######################################################################
+@app.route("/health")
+def health_check():
+    """Let them know our heart is still beating"""
+    return jsonify(status=200, message="Healthy"), status.HTTP_200_OK
 
 
 ######################################################################
@@ -34,9 +41,35 @@ from service.common import status  # HTTP Status Codes
 def index():
     """Root URL response"""
     return (
-        "Reminder: return some useful information in json format about the service here",
+        jsonify(
+            name="Order REST API Service",
+            version="1.0",
+            paths=url_for("list_orders", _external=True),
+        ),
         status.HTTP_200_OK,
     )
+
+
+######################################################################
+# LIST ALL ORDERS
+######################################################################
+@app.route("/orders", methods=["GET"])
+def list_orders():
+    """Returns all of the Orders"""
+    app.logger.info("Request for Order list")
+    orders = []
+
+    # Process the query string if any
+    customer_id = request.args.get("customer_id")
+    if customer_id:
+        orders = Order.find_by_customer_id(customer_id)
+    else:
+        orders = Order.all()
+
+    # Return as an array of dictionaries
+    results = [order.serialize() for order in orders]
+
+    return jsonify(results), status.HTTP_200_OK
 
 
 ######################################################################
