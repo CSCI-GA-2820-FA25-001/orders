@@ -124,6 +124,55 @@ class TestOrderItemService(TestCase):
         resp = self.client.get("/")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
+    def test_create_order(self):
+        """It should Create a new Order"""
+        order = OrderFactory()
+        resp = self.client.post(
+            BASE_URL, json=order.serialize(), content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        # Make sure location header is set
+        location = resp.headers.get("Location", None)
+        self.assertIsNotNone(location)
+
+        # Check the data is correct
+        new_order = resp.get_json()
+        self.assertEqual(
+            new_order["customer_id"], order.customer_id, "Customer_id does not match"
+        )
+        self.assertEqual(new_order["status"], order.status, "Status does not match")
+        self.assertEqual(
+            new_order["created_at"],
+            str(order.created_at),
+            "created_at does not match",
+        )
+        self.assertEqual(
+            new_order["updated_at"],
+            str(order.updated_at),
+            "updated_at does not match",
+        )
+
+        # Todo: Uncomment this code when get_orders is implemented
+        # # Check that the location header was correct by getting it
+        # resp = self.client.get(location, content_type="application/json")
+        # self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        # new_order = resp.get_json()
+        # self.assertEqual(
+        #     new_order["customer_id"], order.customer_id, "Customer_id does not match"
+        # )
+        # self.assertEqual(new_order["status"], order.status, "Status does not match")
+        # self.assertEqual(
+        #     new_order["created_at"],
+        #     str(order.created_at),
+        #     "created_at does not match",
+        # )
+        # self.assertEqual(
+        #     new_order["updated_at"],
+        #     str(order.updated_at),
+        #     "updated_at does not match",
+        # )
+
     ######################################################################
     #  O R D E R I T E M  T E S T   C A S E S
     ######################################################################
