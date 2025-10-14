@@ -176,3 +176,40 @@ class TestOrderService(TestCase):
     ######################################################################
     #  O R D E R I T E M  T E S T   C A S E S
     ######################################################################
+    def test_get_orderitem(self):
+        """It should Get an orderitem from an order"""
+        # create a known orderitem
+        order = self._create_orders(1)[0]
+        orderitem = OrderItemFactory()
+        resp = self.client.post(
+            f"{BASE_URL}/{order.id}/orderitems",
+            json=orderitem.serialize(),
+            content_type="application/json",
+        )
+
+        # If the POST endpoint hasn't been merged yet, this will fail with 404.
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        self.assertIn("Location", resp.headers)
+
+        data = resp.get_json()
+        logging.debug(data)
+
+        self.assertIsNotNone(data, "Response is not JSON")
+        self.assertIn("id", data, f"JSON has no 'id': {data}")
+
+        orderitem_id = data["id"]
+
+        # retrieve it back
+        resp = self.client.get(
+            f"{BASE_URL}/{order.id}/orderitems/{orderitem_id}",
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        data = resp.get_json()
+        logging.debug(data)
+        self.assertEqual(data["order_id"], order.id)
+        self.assertEqual(data["product_id"], orderitem.product_id)
+        self.assertEqual(data["price"], str(orderitem.price))
+        self.assertEqual(data["quantity"], str(orderitem.quantity))
+        self.assertEqual(data["line_amount"], str(orderitem.line_amount))
