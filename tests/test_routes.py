@@ -66,35 +66,6 @@ class TestOrderService(TestCase):
         """Runs once after each test case"""
         db.session.remove()
 
-
-class TestOrderItemService(TestCase):
-    """OrderItem Service Tests"""
-
-    @classmethod
-    def setUpClass(cls):
-        """Run once before all tests"""
-        app.config["TESTING"] = True
-        app.config["DEBUG"] = False
-        # Set up the test database
-        app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
-        app.logger.setLevel(logging.CRITICAL)
-        app.app_context().push()
-
-    @classmethod
-    def tearDownClass(cls):
-        """Runs once before test suite"""
-        db.session.close()
-
-    def setUp(self):
-        """Runs before each test"""
-        self.client = app.test_client()
-        db.session.query(Order).delete()  # clean up the last tests
-        db.session.commit()
-
-    def tearDown(self):
-        """Runs once after each test case"""
-        db.session.remove()
-
     ######################################################################
     #  H E L P E R   M E T H O D S
     ######################################################################
@@ -123,6 +94,62 @@ class TestOrderItemService(TestCase):
         """It should call the home page"""
         resp = self.client.get("/")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+    def test_create_order(self):
+        """It should Create a new Order"""
+        order = OrderFactory()
+        resp = self.client.post(
+            BASE_URL, json=order.serialize(), content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        # Make sure location header is set
+        location = resp.headers.get("Location", None)
+        self.assertIsNotNone(location)
+
+        # Check the data is correct
+        new_order = resp.get_json()
+        self.assertEqual(
+            new_order["customer_id"], order.customer_id, "Customer_id does not match"
+        )
+        self.assertEqual(new_order["status"], order.status, "Status does not match")
+
+        # Todo: Uncomment this code when get_orders is implemented
+        # # Check that the location header was correct by getting it
+        # resp = self.client.get(location, content_type="application/json")
+        # self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        # new_order = resp.get_json()
+        # self.assertEqual(
+        #     new_order["customer_id"], order.customer_id, "Customer_id does not match"
+        # )
+        # self.assertEqual(new_order["status"], order.status, "Status does not match")
+        # self.assertEqual(
+        #     new_order["created_at"],
+        #     str(order.created_at),
+        #     "created_at does not match",
+        # )
+        # self.assertEqual(
+        #     new_order["updated_at"],
+        #     str(order.updated_at),
+        #     "updated_at does not match",
+        # )
+
+    def test_get_order(self):
+        """It should Read a single Order"""
+        # get the id of an order
+        # Todo: substitute _create_orders_db with _create_orders once POST /orders is merged
+        order = self._create_orders_db(1)[0]
+        resp = self.client.get(
+            f"{BASE_URL}/{order.id}", content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(data["id"], order.id)
+
+    def test_get_order_not_found(self):
+        """It should not Read an Order that is not found"""
+        resp = self.client.get(f"{BASE_URL}/999999")
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
     ######################################################################
     #  O R D E R I T E M  T E S T   C A S E S

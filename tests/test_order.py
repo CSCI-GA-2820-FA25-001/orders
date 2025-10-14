@@ -27,6 +27,8 @@ from unittest.mock import patch
 from wsgi import app
 from service.models import Order, OrderItem, DataValidationError, db
 from tests.factories import OrderFactory, OrderItemFactory
+from datetime import datetime, timedelta
+
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
@@ -104,6 +106,32 @@ class TestOrder(TestCase):
         fresh = Order.find(order.id)
         self.assertEqual(len(fresh.orderitem), 3)
         self.assertEqual(str(fresh.total_amount), "19.48")
+    
+    def test_read_order(self):
+        """It should Read an order"""
+        fake_order = OrderFactory()
+        fake_order.create()
+        db.session.refresh(fake_order)
+
+        # Read it back
+        found_order = Order.find(fake_order.id)
+
+        self.assertIsNotNone(found_order)
+        self.assertEqual(found_order.id, fake_order.id)
+        self.assertEqual(found_order.customer_id, fake_order.customer_id)
+        self.assertEqual(found_order.status, fake_order.status)
+        self.assertEqual(found_order.created_at, fake_order.created_at)
+        self.assertEqual(found_order.updated_at, fake_order.updated_at)
+        self.assertLessEqual(
+            abs(found_order.updated_at - found_order.created_at), timedelta(seconds=1)
+        )
+        self.assertEqual(found_order.total_amount, 0)
+        self.assertEqual(found_order.orderitem, [])
+
+    def test_read_order_not_found(self):
+        """It should return None when the order id does not exist"""
+        missing_id = 99999999  # unlikely to exist
+        self.assertIsNone(Order.find(missing_id))
 
     def test_serialize_an_order(self):
         """It should Serialize an order"""
