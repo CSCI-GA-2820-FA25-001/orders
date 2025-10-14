@@ -140,7 +140,7 @@ def create_orders():
 
 
 ######################################################################
-# UPDATE AN EXISTING Order
+# UPDATE AN EXISTING ORDER
 ######################################################################
 @app.route("/orders/<int:order_id>", methods=["PUT"])
 def update_orders(order_id):
