@@ -134,54 +134,22 @@ class TestOrderService(TestCase):
         #     "updated_at does not match",
         # )
 
+    def test_get_order(self):
+        """It should Read a single Order"""
+        # get the id of an order
+        # Todo: substitute _create_orders_db with _create_orders once POST /orders is merged
+        order = self._create_orders_db(1)[0]
+        resp = self.client.get(
+            f"{BASE_URL}/{order.id}", content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(data["id"], order.id)
 
-class TestOrderItemService(TestCase):
-    """OrderItem Service Tests"""
-
-    @classmethod
-    def setUpClass(cls):
-        """Run once before all tests"""
-        app.config["TESTING"] = True
-        app.config["DEBUG"] = False
-        # Set up the test database
-        app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
-        app.logger.setLevel(logging.CRITICAL)
-        app.app_context().push()
-
-    @classmethod
-    def tearDownClass(cls):
-        """Runs once before test suite"""
-        db.session.close()
-
-    def setUp(self):
-        """Runs before each test"""
-        self.client = app.test_client()
-        db.session.query(Order).delete()  # clean up the last tests
-        db.session.commit()
-
-    def tearDown(self):
-        """Runs once after each test case"""
-        db.session.remove()
-
-    ######################################################################
-    #  H E L P E R   M E T H O D S
-    ######################################################################
-
-    def _create_orders(self, count):
-        """Factory method to create orders in bulk"""
-        orders = []
-        for _ in range(count):
-            order = OrderFactory()
-            resp = self.client.post(BASE_URL, json=order.serialize())
-            self.assertEqual(
-                resp.status_code,
-                status.HTTP_201_CREATED,
-                "Could not create test Order",
-            )
-            new_order = resp.get_json()
-            order.id = new_order["id"]
-            orders.append(order)
-        return orders
+    def test_get_order_not_found(self):
+        """It should not Read an Order that is not found"""
+        resp = self.client.get(f"{BASE_URL}/999999")
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
     ######################################################################
     #  O R D E R I T E M  T E S T   C A S E S

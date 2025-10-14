@@ -45,6 +45,24 @@ def index():
             name="Order REST API Service",
             version="1.0",
             paths=url_for("list_orders", _external=True),
+            endpoints={
+                "orders": {
+                    "list": {"method": "GET", "url": "/orders"},
+                    # Todo: uncomment once the endpoint is implemented and tested
+                    #                "create": {"method":"POST", "url": "/orders"},
+                    #                "get":    {"method": "GET", "url": "/orders/<int:order_id>"},
+                    #                "update": {"method": "PUT", "url": "/orders/<int:order_id>"},
+                    #                "delete": {"method": "DELETE", "url": "/orders/<int:order_id>"}
+                },
+                "order_items": {
+                    # Todo: uncomment once the endpoint is implemented and tested
+                    #                "list":   {"method": "GET","url": "/orders/<int:order_id>/items"},
+                    #                "create": {"method": "POST", "url": "/orders/<int:order_id>/items"},
+                    #                "get":    {"method": "GET", "url": "/orders/<int:order_id>/items/<int:item_id>"},
+                    #                "update": {"method": "PUT", "url": "/orders/<int:order_id>/items/<int:item_id>"},
+                    #                "delete": {"method": "DELETE", "url": "/orders/<int:order_id>/items/<int:item_id>"}
+                },
+            },
         ),
         status.HTTP_200_OK,
     )
@@ -73,8 +91,26 @@ def list_orders():
 
 
 ######################################################################
-#  R E S T   A P I   E N D P O I N T S
+# RETRIEVE AN ORDER
 ######################################################################
+@app.route("/orders/<int:order_id>", methods=["GET"])
+def get_orders(order_id):
+    """
+    Retrieve a single Order
+
+    This endpoint will return an Order based on it's id
+    """
+    app.logger.info("Request for Order with id: %s", order_id)
+
+    # See if the order exists and abort if it doesn't
+    order = Order.find(order_id)
+    if not order:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Order with id '{order_id}' could not be found.",
+        )
+
+    return jsonify(order.serialize()), status.HTTP_200_OK
 
 
 ######################################################################
@@ -124,3 +160,5 @@ def check_content_type(content_type):
     abort(
         status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, f"Content-Type must be {content_type}"
     )
+#  R E S T   A P I   E N D P O I N T S
+######################################################################

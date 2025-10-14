@@ -33,9 +33,14 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(config)
 
+    # Preserve key order in JSON responses
+    app.config["JSON_SORT_KEYS"] = False
+    app.json.sort_keys = False
+
     # Initialize Plugins
     # pylint: disable=import-outside-toplevel
     from service.models import db
+
     db.init_app(app)
 
     with app.app_context():
