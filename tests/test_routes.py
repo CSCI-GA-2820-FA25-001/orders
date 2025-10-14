@@ -167,23 +167,27 @@ class TestOrderService(TestCase):
             content_type="application/json",
         )
 
-        # Until POST /orders/<order_id>/orderitems is merged, this test may fail with 405 Method Not Allowed.
-        self.assertEqual(
-            resp.status_code,
-            status.HTTP_201_CREATED,
-            f"Expected 201, got {resp.status_code}. Body: {resp.get_data(as_text=True)}",
-        )
+        # If the POST endpoint hasn't been merged yet, this will fail with 404.
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        self.assertIn("Location", resp.headers)
 
         data = resp.get_json()
-        self.assertIsNotNone(data)
-        self.assertIn("id", data)
+        logging.debug(data)
+
+        self.assertIsNotNone(data, "Response is not JSON")
+        self.assertIn("id", data, f"JSON has no 'id': {data}")
+
         orderitem_id = data["id"]
 
         # retrieve it back
-        resp = self.client.get(f"{BASE_URL}/{order.id}/orderitems/{orderitem_id}")
+        resp = self.client.get(
+            f"{BASE_URL}/{order.id}/orderitems/{orderitem_id}",
+            content_type="application/json",
+        )
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
         data = resp.get_json()
+        logging.debug(data)
         self.assertEqual(data["order_id"], order.id)
         self.assertEqual(data["product_id"], orderitem.product_id)
         self.assertEqual(data["price"], str(orderitem.price))

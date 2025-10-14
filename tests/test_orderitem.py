@@ -144,6 +144,32 @@ class TestOrder(TestCase):
 
         # Unknown order_id should return empty list
         self.assertEqual(OrderItem.find_by_order_id(99999999), [])
+    
+    def test_read_orderitem(self):
+        """It should Read an orderitem"""
+
+        orders = Order.all()
+        self.assertEqual(orders, [])
+        order = OrderFactory()
+        orderitem = OrderItemFactory(order=order)
+        order.orderitem.append(orderitem)
+        order.create()
+
+        # Read it back
+        found_order = Order.find(order.id)
+        self.assertIsNotNone(found_order)
+
+        items = OrderItem.find_by_order_id(found_order.id)
+        self.assertEqual(len(items), 1)
+        found_orderitem = items[0]
+
+        self.assertIsNotNone(found_orderitem)
+        self.assertEqual(found_orderitem.id, orderitem.id)
+        self.assertEqual(found_orderitem.order_id, orderitem.order_id)
+        self.assertEqual(found_orderitem.product_id, orderitem.product_id)
+        self.assertEqual(found_orderitem.price, orderitem.price)
+        self.assertEqual(found_orderitem.quantity, orderitem.quantity)
+        self.assertEqual(found_orderitem.line_amount, orderitem.line_amount)
 
     def test_serialize_an_orderitem(self):
         """It should Serialize an orderitem"""
