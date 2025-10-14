@@ -77,11 +77,18 @@ class TestOrder(TestCase):
         order = Order(
             customer_id=fake_order.customer_id,
             status=fake_order.status,
+            created_at=fake_order.created_at,
+            updated_at=fake_order.updated_at,
         )
         self.assertIsNotNone(order)
         self.assertEqual(order.id, None)
         self.assertEqual(order.customer_id, fake_order.customer_id)
         self.assertEqual(order.status, fake_order.status)
+        self.assertEqual(order.created_at, fake_order.created_at)
+        self.assertEqual(order.created_at, fake_order.created_at)
+
+        # created_at should be the same as updated_at when inserting to db
+        self.assertEqual(order.created_at, order.updated_at)
         self.assertEqual(order.orderitem, [])
 
     def test_total_amount_computed(self):
@@ -97,3 +104,57 @@ class TestOrder(TestCase):
         fresh = Order.find(order.id)
         self.assertEqual(len(fresh.orderitem), 3)
         self.assertEqual(str(fresh.total_amount), "19.48")
+
+    def test_serialize_an_order(self):
+        """It should Serialize an order"""
+        order = OrderFactory()
+        orderitem = OrderItemFactory()
+        order.orderitem.append(orderitem)
+        serial_order = order.serialize()
+        self.assertEqual(serial_order["id"], order.id)
+        self.assertEqual(serial_order["customer_id"], order.customer_id)
+        self.assertEqual(serial_order["status"], order.status.name)
+        self.assertEqual(serial_order["total_amount"], str(order.total_amount))
+        self.assertEqual(serial_order["created_at"], order.created_at.isoformat())
+        self.assertEqual(serial_order["updated_at"], order.updated_at.isoformat())
+        self.assertEqual(len(serial_order["orderitem"]), 1)
+        orderitems = serial_order["orderitem"]
+        self.assertEqual(orderitems[0]["id"], orderitem.id)
+        self.assertEqual(orderitems[0]["order_id"], orderitem.order_id)
+        self.assertEqual(orderitems[0]["product_id"], orderitem.product_id)
+        self.assertEqual(orderitems[0]["price"], str(orderitem.price))
+        self.assertEqual(orderitems[0]["quantity"], str(orderitem.quantity))
+        self.assertEqual(orderitems[0]["line_amount"], str(orderitem.line_amount))
+
+    def test_deserialize_an_order(self):
+        """It should Deserialize an order"""
+        order = OrderFactory()
+        order.orderitem.append(OrderItemFactory())
+        order.create()
+        serial_order = order.serialize()
+        new_order = Order()
+        new_order.deserialize(serial_order)
+        self.assertEqual(new_order.customer_id, order.customer_id)
+        self.assertEqual(new_order.status, order.status)
+        self.assertEqual(new_order.created_at, order.created_at)
+        self.assertEqual(new_order.updated_at, order.updated_at)
+
+    def test_deserialize_with_key_error(self):
+        """It should not Deserialize an order with a KeyError"""
+        order = Order()
+        self.assertRaises(DataValidationError, order.deserialize, {})
+
+    def test_deserialize_with_type_error(self):
+        """It should not Deserialize an order with a TypeError"""
+        order = Order()
+        self.assertRaises(DataValidationError, order.deserialize, [])
+
+    def test_deserialize_orderitem_key_error(self):
+        """It should not Deserialize an orderitem with a KeyError"""
+        orderitem = OrderItem()
+        self.assertRaises(DataValidationError, orderitem.deserialize, {})
+
+    def test_deserialize_orderitem_type_error(self):
+        """It should not Deserialize an orderitem with a TypeError"""
+        orderitem = OrderItem()
+        self.assertRaises(DataValidationError, orderitem.deserialize, [])

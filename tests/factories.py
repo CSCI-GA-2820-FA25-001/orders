@@ -3,8 +3,10 @@ Test Factory to make fake objects for testing
 """
 
 from factory import Factory, SubFactory, Sequence, post_generation
-from factory.fuzzy import FuzzyChoice, FuzzyInteger, FuzzyDecimal
+from factory.fuzzy import FuzzyChoice, FuzzyInteger, FuzzyDecimal, FuzzyNaiveDateTime
+from factory import LazyAttribute
 from service.models import Order, OrderItem, Status
+from datetime import datetime
 
 
 class OrderFactory(Factory):
@@ -19,6 +21,10 @@ class OrderFactory(Factory):
     id = Sequence(lambda n: n)
     customer_id = Sequence(lambda n: f"User{n:04d}")
     status = FuzzyChoice([i for i in Status])
+    created_at = FuzzyNaiveDateTime(datetime(2025, 1, 1))
+
+    # created_at should be the same as updated_at when inserting to db
+    updated_at = LazyAttribute(lambda o: o.created_at)
 
     # the many side of relationships can be a little wonky in factory boy:
     # https://factoryboy.readthedocs.io/en/latest/recipes.html#simple-many-to-many-relationship
