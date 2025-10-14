@@ -112,7 +112,9 @@ class TestOrderService(TestCase):
         self.assertEqual(
             new_order["customer_id"], order.customer_id, "Customer_id does not match"
         )
-        self.assertEqual(new_order["status"], order.status, "Status does not match")
+        self.assertEqual(
+            new_order["status"], order.status.name, "Status does not match"
+        )
 
         # Todo: Uncomment this code when get_orders is implemented
         # # Check that the location header was correct by getting it
@@ -136,9 +138,8 @@ class TestOrderService(TestCase):
 
     def test_get_order(self):
         """It should Read a single Order"""
-        # get the id of an order
-        # Todo: substitute _create_orders_db with _create_orders once POST /orders is merged
-        order = self._create_orders_db(1)[0]
+
+        order = self._create_orders(1)[0]
         resp = self.client.get(
             f"{BASE_URL}/{order.id}", content_type="application/json"
         )
