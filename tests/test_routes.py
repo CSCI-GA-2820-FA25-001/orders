@@ -23,7 +23,7 @@ from unittest import TestCase
 from wsgi import app
 from tests.factories import OrderFactory, OrderItemFactory
 from service.common import status  # HTTP Status Codes
-from service.models import db, Order, OrderItem, Status
+from service.models import db, Order, OrderItem, Status, DataValidationError
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
@@ -151,6 +151,21 @@ class TestOrderService(TestCase):
         """It should not Read an Order that is not found"""
         resp = self.client.get(f"{BASE_URL}/999999")
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_update_order(self):
+        """It should update an existing order via the API"""
+        order = OrderFactory()
+        resp = self.client.post(BASE_URL, json=order.serialize())
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        new_order = resp.get_json()
+        new_order["status"] = "SHIPPED"
+        order_id = new_order["id"]
+
+        # testing if the put works
+        resp = self.client.put(f"{BASE_URL}/{order_id}", json=new_order)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        updated = resp.get_json()
+        self.assertEqual(updated["status"], "SHIPPED")
 
     ######################################################################
     #  O R D E R I T E M  T E S T   C A S E S
