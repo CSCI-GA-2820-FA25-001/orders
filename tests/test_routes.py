@@ -124,6 +124,24 @@ class TestOrderItemService(TestCase):
         resp = self.client.get("/")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
+    def test_get_order_list(self):
+        """It should Get a list of Orders"""
+        self._create_orders(5)
+        resp = self.client.get(BASE_URL)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 5)
+
+    def test_get_order_by_customer_id(self):
+        """It should Get an Order by customer_id"""
+        orders = self._create_orders(3)
+        resp = self.client.get(
+            BASE_URL, query_string=f"customer_id={orders[1].customer_id}"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(data[0]["customer_id"], orders[1].customer_id)
+
     ######################################################################
     #  O R D E R I T E M  T E S T   C A S E S
     ######################################################################

@@ -97,3 +97,23 @@ class TestOrder(TestCase):
         fresh = Order.find(order.id)
         self.assertEqual(len(fresh.orderitem), 3)
         self.assertEqual(str(fresh.total_amount), "19.48")
+
+    def test_list_all_orders(self):
+        """It should List all Orders in the database"""
+        orders = Order.all()
+        self.assertEqual(orders, [])
+        for order in OrderFactory.create_batch(5):
+            order.create()
+        # Assert that there are not 5 orders in the database
+        orders = Order.all()
+        self.assertEqual(len(orders), 5)
+
+    def test_find_by_customer_id(self):
+        """It should Find an Order by customer_id"""
+        order = OrderFactory()
+        order.create()
+
+        # Fetch it back by customer_id
+        same_order = Order.find_by_customer_id(order.customer_id)[0]
+        self.assertEqual(same_order.id, order.id)
+        self.assertEqual(same_order.customer_id, order.customer_id)

@@ -70,10 +70,3 @@ def list_orders():
     results = [order.serialize() for order in orders]
 
     return jsonify(results), status.HTTP_200_OK
-
-
-######################################################################
-#  R E S T   A P I   E N D P O I N T S
-######################################################################
-
-# Todo: Place your REST API code here ...
