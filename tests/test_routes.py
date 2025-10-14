@@ -123,6 +123,11 @@ class TestOrderItemService(TestCase):
         """It should call the home page"""
         resp = self.client.get("/")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertTrue(resp.is_json)
+        data = resp.get_json()
+        self.assertIn("name", data)
+        self.assertIn("version", data)
+        self.assertIn("endpoints", data)
 
     ######################################################################
     #  O R D E R I T E M  T E S T   C A S E S
