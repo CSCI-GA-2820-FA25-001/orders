@@ -139,7 +139,7 @@ def create_orders():
     return jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
 
 ######################################################################
-# DELETE An ORDER
+# DELETE AN ORDER
 ######################################################################
 @app.route("/orders/<int:order_id>", methods=["DELETE"])
 def delete_orders(order_id):
