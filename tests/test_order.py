@@ -87,7 +87,7 @@ class TestOrder(TestCase):
         self.assertEqual(order.customer_id, fake_order.customer_id)
         self.assertEqual(order.status, fake_order.status)
         self.assertEqual(order.created_at, fake_order.created_at)
-        self.assertEqual(order.created_at, fake_order.created_at)
+        self.assertEqual(order.updated_at, fake_order.updated_at)
 
         # created_at should be the same as updated_at when inserting to db
         self.assertEqual(order.created_at, order.updated_at)
