@@ -140,6 +140,28 @@ def create_orders():
 
 
 ######################################################################
+# LIST ORDERITEMS
+######################################################################
+@app.route("/orders/<int:order_id>/orderitems", methods=["GET"])
+def list_orderitems(order_id):
+    """Returns all of the OrderItems for an Order"""
+    app.logger.info("Request for all OrderItems for Order with id: %s", order_id)
+
+    # See if the order exists and abort if it doesn't
+    order = Order.find(order_id)
+    if not order:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Order with id '{order_id}' could not be found.",
+        )
+
+    # Get the orderitems for the order
+    results = [orderitem.serialize() for orderitem in order.orderitems]
+
+    return jsonify(results), status.HTTP_200_OK
+
+
+######################################################################
 #  U T I L I T Y   F U N C T I O N S
 ######################################################################
 
@@ -160,5 +182,3 @@ def check_content_type(content_type):
     abort(
         status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, f"Content-Type must be {content_type}"
     )
-#  R E S T   A P I   E N D P O I N T S
-######################################################################

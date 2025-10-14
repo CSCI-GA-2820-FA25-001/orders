@@ -155,3 +155,37 @@ class TestOrderService(TestCase):
     ######################################################################
     #  O R D E R I T E M  T E S T   C A S E S
     ######################################################################
+    def test_get_orderitem(self):
+        """It should Get an orderitem from an order"""
+        # create a known orderitem
+        order = self._create_orders(1)[0]
+        orderitem = OrderItemFactory()
+
+        resp = self.client.post(
+            f"{BASE_URL}/{order.id}/orderitems",
+            json=orderitem.serialize(),
+            content_type="application/json",
+        )
+
+        # Until POST /orders/<order_id>/orderitems is merged, this test may fail with 405 Method Not Allowed.
+        self.assertEqual(
+            resp.status_code,
+            status.HTTP_201_CREATED,
+            f"Expected 201, got {resp.status_code}. Body: {resp.get_data(as_text=True)}",
+        )
+
+        data = resp.get_json()
+        self.assertIsNotNone(data)
+        self.assertIn("id", data)
+        orderitem_id = data["id"]
+
+        # retrieve it back
+        resp = self.client.get(f"{BASE_URL}/{order.id}/orderitems/{orderitem_id}")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        data = resp.get_json()
+        self.assertEqual(data["order_id"], order.id)
+        self.assertEqual(data["product_id"], orderitem.product_id)
+        self.assertEqual(data["price"], str(orderitem.price))
+        self.assertEqual(data["quantity"], str(orderitem.quantity))
+        self.assertEqual(data["line_amount"], str(orderitem.line_amount))
