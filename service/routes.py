@@ -145,7 +145,7 @@ def create_orders():
 @app.route("/orders/<int:order_id>", methods=["PUT"])
 def update_orders(order_id):
     """
-    Update an Account
+    Update an Order
 
     This endpoint will update an Account based the body that is posted
     """
