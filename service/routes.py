@@ -152,7 +152,7 @@ def update_orders(order_id):
     app.logger.info("Request to update account with id: %s", order_id)
     check_content_type("application/json")
 
-    # See if the account exists and abort if it doesn't
+    # See if the order exists and abort if it doesn't
     order = Order.find(order_id)
     if not order:
         abort(status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found.")
