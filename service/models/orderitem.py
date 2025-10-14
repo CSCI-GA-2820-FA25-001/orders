@@ -84,7 +84,7 @@ class OrderItem(db.Model, PersistentBase):
             ) from error
         except TypeError as error:
             raise DataValidationError(
-                "Invalid Address: body of request contained bad or no data "
+                "Invalid OrderItem: body of request contained bad or no data "
                 + str(error)
             ) from error
 
