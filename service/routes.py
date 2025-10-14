@@ -139,6 +139,32 @@ def create_orders():
     return jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
 
 
+######################################################################
+# UPDATE AN EXISTING Order
+######################################################################
+@app.route("/orders/<int:order_id>", methods=["PUT"])
+def update_accounts(order_id):
+    """
+    Update an Account
+
+    This endpoint will update an Account based the body that is posted
+    """
+    app.logger.info("Request to update account with id: %s", order_id)
+    check_content_type("application/json")
+
+    # See if the account exists and abort if it doesn't
+    order = Order.find(order_id)
+    if not order:
+        abort(status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found.")
+
+    # Update from the json in the body of the request
+    order.deserialize(request.get_json())
+    order.id = order_id
+    order.update()
+
+    return jsonify(order.serialize()), status.HTTP_200_OK
+
+
 #############################################################################
 # RETRIEVE AN ORDERITEM FROM ORDER
 ######################################################################
