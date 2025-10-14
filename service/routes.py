@@ -139,6 +139,44 @@ def create_orders():
     return jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
 
 
+#############################################################################
+# RETRIEVE AN ORDERITEM FROM ORDER
+######################################################################
+@app.route("/orders/<int:order_id>/orderitems/<int:orderitem_id>", methods=["GET"])
+def get_orderitems(order_id, orderitem_id):
+    """
+    Get an OrderItem
+
+    This endpoint returns just an orderitem
+    """
+    app.logger.info(
+        "Request to retrieve OrderItem %s for Order id: %s", orderitem_id, order_id
+    )
+
+    # See if the orderitem exists and abort if it doesn't
+    order = Order.find(order_id)
+    if not order:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Order with id '{order_id}' could not be found.",
+        )
+
+    # See if the orderitem exists and abort if it doesn't
+    orderitem = OrderItem.find(orderitem_id)
+    if not orderitem:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"OrderItem with id '{orderitem_id}' could not be found.",
+        )
+    if orderitem.order_id != order_id:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"OrderItem '{orderitem_id}' does not belong to Order '{order_id}'.",
+        )
+
+    return jsonify(orderitem.serialize()), status.HTTP_200_OK
+
+
 ######################################################################
 #  U T I L I T Y   F U N C T I O N S
 ######################################################################
@@ -160,5 +198,3 @@ def check_content_type(content_type):
     abort(
         status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, f"Content-Type must be {content_type}"
     )
-#  R E S T   A P I   E N D P O I N T S
-######################################################################
