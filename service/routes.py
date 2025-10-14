@@ -143,7 +143,7 @@ def create_orders():
 # UPDATE AN EXISTING Order
 ######################################################################
 @app.route("/orders/<int:order_id>", methods=["PUT"])
-def update_accounts(order_id):
+def update_orders(order_id):
     """
     Update an Account
 
