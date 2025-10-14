@@ -151,6 +151,27 @@ class TestOrderService(TestCase):
         """It should not Read an Order that is not found"""
         resp = self.client.get(f"{BASE_URL}/999999")
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+    
+    # ----------------------------------------------------------
+    # TEST DELETE
+    # ----------------------------------------------------------
+    def test_delete_order(self):
+        """It should Delete an Order"""
+        test_order = self._create_orders(1)[0]
+        response = self.client.delete(f"{BASE_URL}/{test_order.id}")
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(len(response.data), 0)
+        # make sure they are deleted
+        response = self.client.get(f"{BASE_URL}/{test_order.id}")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_delete_non_existing_order(self):
+        """It should Delete a Order even if it doesn't exist"""
+        response = self.client.delete(f"{BASE_URL}/0")
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(len(response.data), 0)
+
+    
 
     ######################################################################
     #  O R D E R I T E M  T E S T   C A S E S
