@@ -80,7 +80,7 @@ class OrderItem(db.Model, PersistentBase):
             raise DataValidationError("Invalid attribute: " + error.args[0]) from error
         except KeyError as error:
             raise DataValidationError(
-                "Invalid Address: missing " + error.args[0]
+                "Invalid OrderItem: missing " + error.args[0]
             ) from error
         except TypeError as error:
             raise DataValidationError(
