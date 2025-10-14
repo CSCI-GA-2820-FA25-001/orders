@@ -203,3 +203,10 @@ class TestOrder(TestCase):
         # Fetch it back again
         order = Order.find(order.id)
         self.assertEqual(order.status, Status.FULFILLED)
+
+    @patch("service.models.db.session.commit")
+    def test_update_order_failed(self, exception_mock):
+        """It should not update an Order on database error"""
+        exception_mock.side_effect = Exception()
+        order = OrderFactory()
+        self.assertRaises(DataValidationError, order.update)
