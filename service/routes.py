@@ -149,7 +149,7 @@ def update_orders(order_id):
 
     This endpoint will update an Order based the body that is posted
     """
-    app.logger.info("Request to update account with id: %s", order_id)
+    app.logger.info("Request to update order with id: %s", order_id)
     check_content_type("application/json")
 
     # See if the order exists and abort if it doesn't
