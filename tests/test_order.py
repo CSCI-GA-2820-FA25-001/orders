@@ -25,13 +25,16 @@ import os
 from unittest import TestCase
 from unittest.mock import patch
 from wsgi import app
+from service.common import status  # HTTP Status Codes
 from service.models import Order, OrderItem, DataValidationError, db
 from tests.factories import OrderFactory, OrderItemFactory
+from service.models.order import Status
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
 )
 
+BASE_URL = "/orders"
 
 ######################################################################
 #  O R D E R   M O D E L   T E S T   C A S E S
@@ -98,19 +101,26 @@ class TestOrder(TestCase):
         self.assertEqual(len(fresh.orderitem), 3)
         self.assertEqual(str(fresh.total_amount), "19.48")
 
-    
-    def test_update_account(self):
-        """It should Update an existing Account"""
-        # create an Account to update
-        test_account = AccountFactory()
-        resp = self.client.post(BASE_URL, json=test_account.serialize())
-        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+    def test_update_order(self):
+        """It should Update an order"""
+        order = OrderFactory(status=Status.CANCELED)
+        order.create()
+        # Assert that it was assigned an id and shows up in the database
+        self.assertIsNotNone(order.id)
+        self.assertEqual(order.status, Status.CANCELED)
 
-        # update the pet
-        new_account = resp.get_json()
-        new_account["name"] = "Happy-Happy Joy-Joy"
-        new_account_id = new_account["id"]
-        resp = self.client.put(f"{BASE_URL}/{new_account_id}", json=new_account)
-        self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        updated_account = resp.get_json()
-        self.assertEqual(updated_account["name"], "Happy-Happy Joy-Joy")
+        # Fetch it back
+        order = Order.find(order.id)
+        order.status = Status.FULFILLED
+        order.update()
+
+        # Fetch it back again
+        order = Order.find(order.id)
+        self.assertEqual(order.status, Status.FULFILLED)
+
+    @patch("service.models.db.session.commit")
+    def test_order_account_failed(self, exception_mock):
+        """It should not update an Order on database error"""
+        exception_mock.side_effect = Exception()
+        order = OrderFactory()
+        self.assertRaises(DataValidationError, order.update)

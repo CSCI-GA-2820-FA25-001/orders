@@ -72,37 +72,57 @@ def list_orders():
     return jsonify(results), status.HTTP_200_OK
 
 
-
-
-
 ######################################################################
 # UPDATE AN EXISTING Order
 ######################################################################
-@app.route("/orders/<int:customer_id>", methods=["PUT"])
-def update_accounts(account_id):
+@app.route("/orders/<int:order_id>", methods=["PUT"])
+def update_order(order_id):
     """
     Update an Account
 
     This endpoint will update an Account based the body that is posted
     """
-    app.logger.info("Request to update account with id: %s", account_id)
-    check_content_type("application/json")
+    app.logger.info("Request to update account with id: %s", order_id)
+    check_content_type("order/json")
 
     # See if the account exists and abort if it doesn't
-    account = Account.find(account_id)
-    if not account:
-        abort(
-            status.HTTP_404_NOT_FOUND, f"Account with id '{account_id}' was not found."
-        )
+    order = Order.find(order_id)
+    if not order:
+        abort(status.HTTP_404_NOT_FOUND, f"Account with id '{order_id}' was not found.")
 
     # Update from the json in the body of the request
-    account.deserialize(request.get_json())
-    account.id = account_id
-    account.update()
+    order.deserialize(request.get_json())
+    order.id = order_id
+    order.update()
 
-    return jsonify(account.serialize()), status.HTTP_200_OK
+    return jsonify(order.serialize()), status.HTTP_200_OK
+
+
 ######################################################################
 #  R E S T   A P I   E N D P O I N T S
 ######################################################################
 
 # Todo: Place your REST API code here ...
+
+
+######################################################################
+#  U T I L I T Y   F U N C T I O N S
+######################################################################
+
+
+def check_content_type(content_type):
+    """Checks that the media type is correct"""
+    if "Content-Type" not in request.headers:
+        app.logger.error("No Content-Type specified.")
+        abort(
+            status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            f"Content-Type must be {content_type}",
+        )
+
+    if request.headers["Content-Type"] == content_type:
+        return
+
+    app.logger.error("Invalid Content-Type: %s", request.headers["Content-Type"])
+    abort(
+        status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, f"Content-Type must be {content_type}"
+    )

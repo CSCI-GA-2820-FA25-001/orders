@@ -1,3 +1,9 @@
+import logging
+from enum import Enum
+from decimal import Decimal, InvalidOperation
+from .persistent_base import db, PersistentBase, DataValidationError
+from .orderitem import OrderItem
+
 """
 Models for Order
 
@@ -8,11 +14,6 @@ All of the models are stored in this module
 Persistent Base class for database CRUD functions
 """
 
-import logging
-from enum import Enum
-from decimal import Decimal, InvalidOperation
-from .persistent_base import db, PersistentBase, DataValidationError
-from .orderitem import OrderItem
 
 logger = logging.getLogger("flask.app")
 

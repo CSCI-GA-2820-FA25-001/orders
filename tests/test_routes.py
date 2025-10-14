@@ -124,8 +124,21 @@ class TestOrderItemService(TestCase):
         resp = self.client.get("/")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
+    def test_update_order(self):
+        """It should update an existing order via the API"""
+        order = OrderFactory()
+        resp = self.client.post(BASE_URL, json=order.serialize())
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        new_order = resp.get_json()
+        new_order["status"] = "SHIPPED"
+        order_id = new_order["id"]
+
+        # testing if the put works
+        resp = self.client.put(f"{BASE_URL}/{order_id}", json=new_order)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        updated = resp.get_json()
+        self.assertEqual(updated["status"], "SHIPPED")
+
     ######################################################################
     #  O R D E R I T E M  T E S T   C A S E S
     ######################################################################
-
-    
