@@ -100,19 +100,38 @@ class TestOrderItemService(TestCase):
     ######################################################################
 
     def _create_orders(self, count):
-        """Factory method to create orders in bulk"""
         orders = []
         for _ in range(count):
-            order = OrderFactory()
-            resp = self.client.post(BASE_URL, json=order.serialize())
+            fake = OrderFactory()
+            payload = {
+                "customer_id": fake.customer_id,
+                "status": getattr(fake.status, "name", fake.status),
+                "orderitem": [],
+            }
+            resp = self.client.post(BASE_URL, json=payload)
+
             self.assertEqual(
-                resp.status_code,
-                status.HTTP_201_CREATED,
-                "Could not create test Order",
+                resp.status_code, status.HTTP_201_CREATED, "Could not create test Order"
             )
-            new_order = resp.get_json()
-            order.id = new_order["id"]
-            orders.append(order)
+            new_id = resp.get_json()["id"]
+
+            new_order = Order.find(new_id)
+            orders.append(new_order)
+        return orders
+
+    def _create_orders_db(self, count):
+        """Create orders directly via ORM (temporary helper before POST /orders is merged)."""
+        orders = []
+        for _ in range(count):
+            fake = OrderFactory()
+
+            order = Order(
+                customer_id=fake.customer_id, status=fake.status, orderitem=[]
+            )
+            order.create()
+
+            new_order = Order.find(order.id)
+            orders.append(new_order)
         return orders
 
     ######################################################################
@@ -123,6 +142,23 @@ class TestOrderItemService(TestCase):
         """It should call the home page"""
         resp = self.client.get("/")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+    def test_get_order(self):
+        """It should Read a single Order"""
+        # get the id of an order
+        # Todo: substitute _create_orders_db with _create_orders once POST /orders is merged
+        order = self._create_orders_db(1)[0]
+        resp = self.client.get(
+            f"{BASE_URL}/{order.id}", content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(data["id"], order.id)
+
+    def test_get_order_not_found(self):
+        """It should not Read an Order that is not found"""
+        resp = self.client.get(f"{BASE_URL}/999999")
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
     ######################################################################
     #  O R D E R I T E M  T E S T   C A S E S
