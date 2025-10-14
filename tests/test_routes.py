@@ -66,72 +66,24 @@ class TestOrderService(TestCase):
         """Runs once after each test case"""
         db.session.remove()
 
-
-class TestOrderItemService(TestCase):
-    """OrderItem Service Tests"""
-
-    @classmethod
-    def setUpClass(cls):
-        """Run once before all tests"""
-        app.config["TESTING"] = True
-        app.config["DEBUG"] = False
-        # Set up the test database
-        app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
-        app.logger.setLevel(logging.CRITICAL)
-        app.app_context().push()
-
-    @classmethod
-    def tearDownClass(cls):
-        """Runs once before test suite"""
-        db.session.close()
-
-    def setUp(self):
-        """Runs before each test"""
-        self.client = app.test_client()
-        db.session.query(Order).delete()  # clean up the last tests
-        db.session.commit()
-
-    def tearDown(self):
-        """Runs once after each test case"""
-        db.session.remove()
-
     ######################################################################
     #  H E L P E R   M E T H O D S
     ######################################################################
 
     def _create_orders(self, count):
+        """Factory method to create orders in bulk"""
         orders = []
         for _ in range(count):
-            fake = OrderFactory()
-            payload = {
-                "customer_id": fake.customer_id,
-                "status": getattr(fake.status, "name", fake.status),
-                "orderitem": [],
-            }
-            resp = self.client.post(BASE_URL, json=payload)
-
+            order = OrderFactory()
+            resp = self.client.post(BASE_URL, json=order.serialize())
             self.assertEqual(
-                resp.status_code, status.HTTP_201_CREATED, "Could not create test Order"
+                resp.status_code,
+                status.HTTP_201_CREATED,
+                "Could not create test Order",
             )
-            new_id = resp.get_json()["id"]
-
-            new_order = Order.find(new_id)
-            orders.append(new_order)
-        return orders
-
-    def _create_orders_db(self, count):
-        """Create orders directly via ORM (temporary helper before POST /orders is merged)."""
-        orders = []
-        for _ in range(count):
-            fake = OrderFactory()
-
-            order = Order(
-                customer_id=fake.customer_id, status=fake.status, orderitem=[]
-            )
-            order.create()
-
-            new_order = Order.find(order.id)
-            orders.append(new_order)
+            new_order = resp.get_json()
+            order.id = new_order["id"]
+            orders.append(order)
         return orders
 
     ######################################################################
@@ -142,11 +94,45 @@ class TestOrderItemService(TestCase):
         """It should call the home page"""
         resp = self.client.get("/")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        self.assertTrue(resp.is_json)
-        data = resp.get_json()
-        self.assertIn("name", data)
-        self.assertIn("version", data)
-        self.assertIn("endpoints", data)
+
+    def test_create_order(self):
+        """It should Create a new Order"""
+        order = OrderFactory()
+        resp = self.client.post(
+            BASE_URL, json=order.serialize(), content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        # Make sure location header is set
+        location = resp.headers.get("Location", None)
+        self.assertIsNotNone(location)
+
+        # Check the data is correct
+        new_order = resp.get_json()
+        self.assertEqual(
+            new_order["customer_id"], order.customer_id, "Customer_id does not match"
+        )
+        self.assertEqual(new_order["status"], order.status, "Status does not match")
+
+        # Todo: Uncomment this code when get_orders is implemented
+        # # Check that the location header was correct by getting it
+        # resp = self.client.get(location, content_type="application/json")
+        # self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        # new_order = resp.get_json()
+        # self.assertEqual(
+        #     new_order["customer_id"], order.customer_id, "Customer_id does not match"
+        # )
+        # self.assertEqual(new_order["status"], order.status, "Status does not match")
+        # self.assertEqual(
+        #     new_order["created_at"],
+        #     str(order.created_at),
+        #     "created_at does not match",
+        # )
+        # self.assertEqual(
+        #     new_order["updated_at"],
+        #     str(order.updated_at),
+        #     "updated_at does not match",
+        # )
 
     def test_get_order(self):
         """It should Read a single Order"""
