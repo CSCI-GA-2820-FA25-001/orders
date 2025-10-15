@@ -95,7 +95,7 @@ class TestOrder(TestCase):
         self.assertEqual(new_order.orderitem[1].product_id, orderitem2.product_id)
 
     def test_line_amount_computed(self):
-        "It should compute line_amount as price multiplied by quantity for an OrderItem"
+        """It should compute line_amount as price multiplied by quantity for an OrderItem"""
 
         order = OrderFactory()
         orderitem = OrderItemFactory(order=order, price="12.50", quantity=3)
@@ -105,3 +105,56 @@ class TestOrder(TestCase):
         fresh = Order.find(order.id)
         self.assertEqual(len(fresh.orderitem), 1)
         self.assertEqual(str(fresh.orderitem[0].line_amount), "37.50")  # 12.50 * 3
+
+    def test_read_orderitem(self):
+        """It should Read an orderitem"""
+
+        orders = Order.all()
+        self.assertEqual(orders, [])
+        order = OrderFactory()
+        orderitem = OrderItemFactory(order=order)
+        order.orderitem.append(orderitem)
+        order.create()
+
+        # Read it back
+        found_order = Order.find(order.id)
+        self.assertIsNotNone(found_order)
+
+        items = OrderItem.find_by_order_id(found_order.id)
+        self.assertEqual(len(items), 1)
+        found_orderitem = items[0]
+
+        self.assertIsNotNone(found_orderitem)
+        self.assertEqual(found_orderitem.id, orderitem.id)
+        self.assertEqual(found_orderitem.order_id, orderitem.order_id)
+        self.assertEqual(found_orderitem.product_id, orderitem.product_id)
+        self.assertEqual(found_orderitem.price, orderitem.price)
+        self.assertEqual(found_orderitem.quantity, orderitem.quantity)
+        self.assertEqual(found_orderitem.line_amount, orderitem.line_amount)
+
+    def test_serialize_an_orderitem(self):
+        """It should Serialize an orderitem"""
+
+        orderitem = OrderItemFactory()
+        serial_orderitem = orderitem.serialize()
+
+        self.assertEqual(serial_orderitem["id"], orderitem.id)
+        self.assertEqual(serial_orderitem["order_id"], orderitem.order_id)
+        self.assertEqual(serial_orderitem["product_id"], orderitem.product_id)
+        self.assertEqual(serial_orderitem["price"], str(orderitem.price))
+        self.assertEqual(serial_orderitem["quantity"], str(orderitem.quantity))
+        self.assertEqual(serial_orderitem["line_amount"], str(orderitem.line_amount))
+
+    def test_deserialize_an_orderitem(self):
+        """It should Deserialize an orderitem"""
+
+        orderitem = OrderItemFactory()
+        orderitem.create()
+        new_orderitem = OrderItem()
+        new_orderitem.deserialize(orderitem.serialize())
+
+        self.assertEqual(new_orderitem.order_id, orderitem.order_id)
+        self.assertEqual(new_orderitem.product_id, orderitem.product_id)
+        self.assertEqual(new_orderitem.price, orderitem.price)
+        self.assertEqual(new_orderitem.quantity, orderitem.quantity)
+        self.assertEqual(new_orderitem.line_amount, orderitem.line_amount)

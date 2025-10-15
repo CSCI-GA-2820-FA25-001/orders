@@ -25,8 +25,10 @@ import os
 from unittest import TestCase
 from unittest.mock import patch
 from wsgi import app
-from service.models import Order, OrderItem, DataValidationError, db
+from service.models import Order, OrderItem, DataValidationError, db, Status
 from tests.factories import OrderFactory, OrderItemFactory
+from datetime import datetime, timedelta
+
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
@@ -77,11 +79,18 @@ class TestOrder(TestCase):
         order = Order(
             customer_id=fake_order.customer_id,
             status=fake_order.status,
+            created_at=fake_order.created_at,
+            updated_at=fake_order.updated_at,
         )
         self.assertIsNotNone(order)
         self.assertEqual(order.id, None)
         self.assertEqual(order.customer_id, fake_order.customer_id)
         self.assertEqual(order.status, fake_order.status)
+        self.assertEqual(order.created_at, fake_order.created_at)
+        self.assertEqual(order.updated_at, fake_order.updated_at)
+
+        # created_at should be the same as updated_at when inserting to db
+        self.assertEqual(order.created_at, order.updated_at)
         self.assertEqual(order.orderitem, [])
 
     def test_total_amount_computed(self):
@@ -117,3 +126,107 @@ class TestOrder(TestCase):
         same_order = Order.find_by_customer_id(order.customer_id)[0]
         self.assertEqual(same_order.id, order.id)
         self.assertEqual(same_order.customer_id, order.customer_id)
+    
+    def test_read_order(self):
+        """It should Read an order"""
+        fake_order = OrderFactory()
+        fake_order.create()
+        db.session.refresh(fake_order)
+
+        # Read it back
+        found_order = Order.find(fake_order.id)
+
+        self.assertIsNotNone(found_order)
+        self.assertEqual(found_order.id, fake_order.id)
+        self.assertEqual(found_order.customer_id, fake_order.customer_id)
+        self.assertEqual(found_order.status, fake_order.status)
+        self.assertEqual(found_order.created_at, fake_order.created_at)
+        self.assertEqual(found_order.updated_at, fake_order.updated_at)
+        self.assertLessEqual(
+            abs(found_order.updated_at - found_order.created_at), timedelta(seconds=1)
+        )
+        self.assertEqual(found_order.total_amount, 0)
+        self.assertEqual(found_order.orderitem, [])
+
+    def test_read_order_not_found(self):
+        """It should return None when the order id does not exist"""
+        missing_id = 99999999  # unlikely to exist
+        self.assertIsNone(Order.find(missing_id))
+
+    def test_serialize_an_order(self):
+        """It should Serialize an order"""
+        order = OrderFactory()
+        orderitem = OrderItemFactory()
+        order.orderitem.append(orderitem)
+        serial_order = order.serialize()
+        self.assertEqual(serial_order["id"], order.id)
+        self.assertEqual(serial_order["customer_id"], order.customer_id)
+        self.assertEqual(serial_order["status"], order.status.name)
+        self.assertEqual(serial_order["total_amount"], str(order.total_amount))
+        self.assertEqual(serial_order["created_at"], order.created_at.isoformat())
+        self.assertEqual(serial_order["updated_at"], order.updated_at.isoformat())
+        self.assertEqual(len(serial_order["orderitem"]), 1)
+        orderitems = serial_order["orderitem"]
+        self.assertEqual(orderitems[0]["id"], orderitem.id)
+        self.assertEqual(orderitems[0]["order_id"], orderitem.order_id)
+        self.assertEqual(orderitems[0]["product_id"], orderitem.product_id)
+        self.assertEqual(orderitems[0]["price"], str(orderitem.price))
+        self.assertEqual(orderitems[0]["quantity"], str(orderitem.quantity))
+        self.assertEqual(orderitems[0]["line_amount"], str(orderitem.line_amount))
+
+    def test_deserialize_an_order(self):
+        """It should Deserialize an order"""
+        order = OrderFactory()
+        order.orderitem.append(OrderItemFactory())
+        order.create()
+        serial_order = order.serialize()
+        new_order = Order()
+        new_order.deserialize(serial_order)
+        self.assertEqual(new_order.customer_id, order.customer_id)
+        self.assertEqual(new_order.status, order.status)
+        self.assertEqual(new_order.created_at, order.created_at)
+        self.assertEqual(new_order.updated_at, order.updated_at)
+
+    def test_deserialize_with_key_error(self):
+        """It should not Deserialize an order with a KeyError"""
+        order = Order()
+        self.assertRaises(DataValidationError, order.deserialize, {})
+
+    def test_deserialize_with_type_error(self):
+        """It should not Deserialize an order with a TypeError"""
+        order = Order()
+        self.assertRaises(DataValidationError, order.deserialize, [])
+
+    def test_deserialize_orderitem_key_error(self):
+        """It should not Deserialize an orderitem with a KeyError"""
+        orderitem = OrderItem()
+        self.assertRaises(DataValidationError, orderitem.deserialize, {})
+
+    def test_deserialize_orderitem_type_error(self):
+        """It should not Deserialize an orderitem with a TypeError"""
+        orderitem = OrderItem()
+        self.assertRaises(DataValidationError, orderitem.deserialize, [])
+
+    def test_update_order(self):
+        """It should Update an order"""
+        order = OrderFactory(status=Status.CANCELED)
+        order.create()
+        # Assert that it was assigned an id and shows up in the database
+        self.assertIsNotNone(order.id)
+        self.assertEqual(order.status, Status.CANCELED)
+
+        # Fetch it back
+        order = Order.find(order.id)
+        order.status = Status.FULFILLED
+        order.update()
+
+        # Fetch it back again
+        order = Order.find(order.id)
+        self.assertEqual(order.status, Status.FULFILLED)
+
+    @patch("service.models.db.session.commit")
+    def test_update_order_failed(self, exception_mock):
+        """It should not update an Order on database error"""
+        exception_mock.side_effect = Exception()
+        order = OrderFactory()
+        self.assertRaises(DataValidationError, order.update)

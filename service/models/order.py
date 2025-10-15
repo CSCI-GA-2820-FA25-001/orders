@@ -13,6 +13,7 @@ from enum import Enum
 from decimal import Decimal, InvalidOperation
 from .persistent_base import db, PersistentBase, DataValidationError
 from .orderitem import OrderItem
+from datetime import datetime
 
 logger = logging.getLogger("flask.app")
 
@@ -51,9 +52,9 @@ class Order(db.Model, PersistentBase):
         return sum((i.line_amount or 0) for i in self.orderitem)
 
     # Database auditing fields
-    created_at = db.Column(db.DateTime, default=db.func.now(), nullable=False)
+    created_at = db.Column(db.DateTime(), nullable=False, default=datetime.now())
     updated_at = db.Column(
-        db.DateTime, default=db.func.now(), onupdate=db.func.now(), nullable=False
+        db.DateTime(), nullable=False, default=datetime.now(), onupdate=datetime.now()
     )
 
     orderitem = db.relationship("OrderItem", backref="order", passive_deletes=True)
@@ -92,6 +93,8 @@ class Order(db.Model, PersistentBase):
         try:
             self.customer_id = data["customer_id"]
             self.status = Status[data["status"].upper()]
+            self.created_at = datetime.fromisoformat(data["created_at"])
+            self.updated_at = datetime.fromisoformat(data["updated_at"])
 
             if "orderitem" in data:
                 for i in list(self.orderitem):

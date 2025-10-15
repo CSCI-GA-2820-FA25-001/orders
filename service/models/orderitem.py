@@ -60,12 +60,12 @@ class OrderItem(db.Model, PersistentBase):
             data (dict): A dictionary containing the resource data
         """
         try:
-            self.order_id = data.get("order_id", self.order_id)
+            self.order_id = data["order_id"]
             self.product_id = data["product_id"]
             self.price = Decimal(str(data["price"]))
             self.quantity = int(data["quantity"])
 
-            parsed_line = data.get("line_amount", None)
+            parsed_line = data["line_amount"]
             computed_line = self.price * self.quantity
 
             if parsed_line is not None:
@@ -76,14 +76,17 @@ class OrderItem(db.Model, PersistentBase):
                         parsed_line,
                         computed_line,
                     )
-
+        except AttributeError as error:
+            raise DataValidationError("Invalid attribute: " + error.args[0]) from error
         except KeyError as error:
             raise DataValidationError(
                 "Invalid OrderItem: missing " + error.args[0]
             ) from error
-
-        except (InvalidOperation, ValueError, TypeError) as error:
-            raise DataValidationError("Invalid numeric value in OrderItem") from error
+        except TypeError as error:
+            raise DataValidationError(
+                "Invalid OrderItem: body of request contained bad or no data "
+                + str(error)
+            ) from error
 
         return self
 
