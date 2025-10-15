@@ -51,7 +51,7 @@ def index():
                     # Todo: uncomment once the endpoint is implemented and tested
                     "create": {"method": "POST", "url": "/orders"},
                     "get": {"method": "GET", "url": "/orders/<int:order_id>"},
-                    #                "update": {"method": "PUT", "url": "/orders/<int:order_id>"},
+                    "update": {"method": "PUT", "url": "/orders/<int:order_id>"},
                     #                "delete": {"method": "DELETE", "url": "/orders/<int:order_id>"}
                 },
                 "order_items": {
@@ -63,7 +63,10 @@ def index():
                         "url": "/orders/<int:order_id>/items/<int:item_id>",
                     },
                     #                "update": {"method": "PUT", "url": "/orders/<int:order_id>/items/<int:item_id>"},
-                    #                "delete": {"method": "DELETE", "url": "/orders/<int:order_id>/items/<int:item_id>"}
+                    "delete": {
+                        "method": "DELETE",
+                        "url": "/orders/<int:order_id>/items/<int:item_id>",
+                    },
                 },
             },
         ),
@@ -140,7 +143,7 @@ def create_orders():
 
     return jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
 
-  
+
 ######################################################################
 # UPDATE AN EXISTING ORDER
 ######################################################################
@@ -204,8 +207,8 @@ def create_orderitems(order_id):
         "get_orderitems", order_id=order.id, orderitem_id=orderitem.id, _external=True
     )
     return jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
-  
-  
+
+
 #############################################################################
 # RETRIEVE AN ORDERITEM FROM ORDER
 ######################################################################
@@ -242,6 +245,28 @@ def get_orderitems(order_id, orderitem_id):
         )
 
     return jsonify(orderitem.serialize()), status.HTTP_200_OK
+
+
+######################################################################
+# DELETE AN ORDERITEM
+######################################################################
+@app.route("/orders/<int:order_id>/orderitems/<int:orderitem_id>", methods=["DELETE"])
+def delete_orderitems(order_id, orderitem_id):
+    """
+    Delete an OrderItem
+
+    This endpoint will delete an OrderItem based the id specified in the path
+    """
+    app.logger.info(
+        "Request to delete OrderItem %s for Order id: %s", (orderitem_id, order_id)
+    )
+
+    # See if the orderitem exists and delete it if it does
+    orderitem = OrderItem.find(orderitem_id)
+    if orderitem:
+        orderitem.delete()
+
+    return "", status.HTTP_204_NO_CONTENT
 
 
 ######################################################################

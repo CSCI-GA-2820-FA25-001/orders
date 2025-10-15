@@ -242,3 +242,31 @@ class TestOrderService(TestCase):
         self.assertEqual(data["price"], str(orderitem.price))
         self.assertEqual(data["quantity"], str(orderitem.quantity))
         self.assertEqual(data["line_amount"], str(orderitem.line_amount))
+
+    def test_delete_orderitem(self):
+        """It should Delete an OrderItem"""
+        order = self._create_orders(1)[0]
+        orderitem = OrderItemFactory()
+        resp = self.client.post(
+            f"{BASE_URL}/{order.id}/orderitems",
+            json=orderitem.serialize(),
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        data = resp.get_json()
+        logging.debug(data)
+        orderitem_id = data["id"]
+
+        # send delete request
+        resp = self.client.delete(
+            f"{BASE_URL}/{order.id}/orderitems/{orderitem_id}",
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+
+        # retrieve it back and make sure orderitem is not there
+        resp = self.client.get(
+            f"{BASE_URL}/{order.id}/orderitems/{orderitem_id}",
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
