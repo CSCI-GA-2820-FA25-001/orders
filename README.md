@@ -3,13 +3,9 @@
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python](https://img.shields.io/badge/Language-Python-blue.svg)](https://python.org/)
 
-This is a skeleton you can use to start your projects.
-
-**Note:** _Feel free to overwrite this `README.md` file with the one that describes your project._
-
 ## Overview
 
-This project template contains starter code for your class project. The `/service` folder contains your `models.py` file for your model and a `routes.py` file for your service. The `/tests` folder has test case starter code for testing the model and the service separately. All you need to do is add your functionality. You can use the [lab-flask-tdd](https://github.com/nyu-devops/lab-flask-tdd) for code examples to copy from.
+This project template contains starter code for our class project. The `/service/models` folder contains `order.py` file and `orderitem.py` for our model and a `routes.py` file for our service. The `/tests` folder has test case starter code for testing the model and the service separately. We used the [sample-accounts](https://github.com/nyu-devops/sample-accounts.git) for code examples to copy from.
 
 ## Automatic Setup
 
@@ -44,8 +40,12 @@ pyproject.toml      - Poetry list of Python libraries required by your code
 service/                   - service python package
 ├── __init__.py            - package initializer
 ├── config.py              - configuration parameters
-├── models.py              - module with business models
 ├── routes.py              - module with service routes
+├── models
+│   ├── __init__.py        - package initializer
+│   ├── order.py           - module with order model
+│   ├── orderitem.py       - module with subordinate order item model
+│   └── persistent_base.py - Persistence base classes
 └── common                 - common code package
     ├── cli_commands.py    - Flask command to recreate all tables
     ├── error_handlers.py  - HTTP error handling code
@@ -56,9 +56,35 @@ tests/                     - test cases package
 ├── __init__.py            - package initializer
 ├── factories.py           - Factory for testing with fake objects
 ├── test_cli_commands.py   - test suite for the CLI
-├── test_models.py         - test suite for business models
+├── test_order.py          - test suite for order
+├── test_orderitem.py      - test suite for subordinate order item
 └── test_routes.py         - test suite for service routes
+
 ```
+
+## Information about this repo
+
+These are the RESTful routes for `orders` and `orderitems`
+
+```
+Endpoint             Methods  Rule
+-------------------  -------  -----------------------------------------------------
+index                GET      /
+
+list_orders          GET      /orders
+create_orders        POST     /orders
+get_orders           GET      /orders/<order_id>
+update_orders        PUT      /orders/<order_id>
+delete_orders        DELETE   /orders/<order_id>
+
+list_orderitems      GET      /orders/<int:order_id>/orderitems
+create_orderitems    POST     /orders/<order_id>/orderitems
+get_orderitems       GET      /orders/<order_id>/orderitems/<orderitem_id>
+update_orderitems    PUT      /orders/<order_id>/orderitems/<orderitem_id>
+delete_orderitems    DELETE   /orders/<order_id>/orderitems/<orderitem_id>
+```
+
+The test cases have 95% test coverage and can be run with `pytest`
 
 ## License
 
