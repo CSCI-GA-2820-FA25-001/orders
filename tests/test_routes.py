@@ -117,24 +117,26 @@ class TestOrderService(TestCase):
         )
 
         # Todo: Uncomment this code when get_orders is implemented
-        # # Check that the location header was correct by getting it
-        # resp = self.client.get(location, content_type="application/json")
-        # self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        # new_order = resp.get_json()
-        # self.assertEqual(
-        #     new_order["customer_id"], order.customer_id, "Customer_id does not match"
-        # )
-        # self.assertEqual(new_order["status"], order.status, "Status does not match")
-        # self.assertEqual(
-        #     new_order["created_at"],
-        #     str(order.created_at),
-        #     "created_at does not match",
-        # )
-        # self.assertEqual(
-        #     new_order["updated_at"],
-        #     str(order.updated_at),
-        #     "updated_at does not match",
-        # )
+        # Check that the location header was correct by getting it
+        resp = self.client.get(location, content_type="application/json")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        new_order = resp.get_json()
+        self.assertEqual(
+            new_order["customer_id"], order.customer_id, "Customer_id does not match"
+        )
+        self.assertEqual(
+            new_order["status"], order.status.name, "Status does not match"
+        )
+        self.assertEqual(
+            new_order["created_at"],
+            order.created_at.isoformat(),
+            "created_at does not match",
+        )
+        self.assertEqual(
+            new_order["updated_at"],
+            order.updated_at.isoformat(),
+            "updated_at does not match",
+        )
 
     def test_get_order(self):
         """It should Read a single Order"""
@@ -170,6 +172,39 @@ class TestOrderService(TestCase):
     ######################################################################
     #  O R D E R I T E M  T E S T   C A S E S
     ######################################################################
+    def test_add_orderitem(self):
+        """It should Add an orderitem to an order"""
+        order = self._create_orders(1)[0]
+        orderitem = OrderItemFactory()
+        resp = self.client.post(
+            f"{BASE_URL}/{order.id}/orderitems",
+            json=orderitem.serialize(),
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        # Make sure location header is set
+        location = resp.headers.get("Location", None)
+        self.assertIsNotNone(location)
+
+        data = resp.get_json()
+        logging.debug(data)
+        self.assertEqual(data["order_id"], order.id)
+        self.assertEqual(data["product_id"], orderitem.product_id)
+        self.assertEqual(data["price"], str(orderitem.price))
+        self.assertEqual(data["quantity"], str(orderitem.quantity))
+        self.assertEqual(data["line_amount"], str(orderitem.line_amount))
+
+        # Check that the location header was correct by getting it
+        resp = self.client.get(location, content_type="application/json")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        new_orderitem = resp.get_json()
+        self.assertEqual(
+            new_orderitem["product_id"],
+            orderitem.product_id,
+            "OrderItem product_id does not match",
+        )
+
     def test_get_orderitem(self):
         """It should Get an orderitem from an order"""
         # create a known orderitem
