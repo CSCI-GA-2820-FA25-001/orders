@@ -49,17 +49,20 @@ def index():
                 "orders": {
                     "list": {"method": "GET", "url": "/orders"},
                     # Todo: uncomment once the endpoint is implemented and tested
-                    #                "create": {"method":"POST", "url": "/orders"},
-                    #                "get":    {"method": "GET", "url": "/orders/<int:order_id>"},
-                    #                "update": {"method": "PUT", "url": "/orders/<int:order_id>"},
+                    "create": {"method": "POST", "url": "/orders"},
+                    "get": {"method": "GET", "url": "/orders/<int:order_id>"},
+                    "update": {"method": "PUT", "url": "/orders/<int:order_id>"},
                     #                "delete": {"method": "DELETE", "url": "/orders/<int:order_id>"}
                 },
                 "order_items": {
                     # Todo: uncomment once the endpoint is implemented and tested
-                    #                "list":   {"method": "GET","url": "/orders/<int:order_id>/items"},
-                    #                "create": {"method": "POST", "url": "/orders/<int:order_id>/items"},
-                    #                "get":    {"method": "GET", "url": "/orders/<int:order_id>/items/<int:item_id>"},
-                    #                "update": {"method": "PUT", "url": "/orders/<int:order_id>/items/<int:item_id>"},
+                    "list":   {"method": "GET","url": "/orders/<int:order_id>/items"},
+                    "create": {"method": "POST", "url": "/orders/<int:order_id>/items"},
+                    "get": {
+                        "method": "GET",
+                        "url": "/orders/<int:order_id>/items/<int:item_id>",
+                    },
+                    "update": {"method": "PUT", "url": "/orders/<int:order_id>/items/<int:item_id>"},
                     #                "delete": {"method": "DELETE", "url": "/orders/<int:order_id>/items/<int:item_id>"}
                 },
             },
@@ -133,9 +136,73 @@ def create_orders():
     # Create a message to return
     message = order.serialize()
     # Todo; uncomment this code when get_orders is implemented
-    # location_url = url_for("get_orders", order_id=order.id, _external=True)
-    location_url = "unknown"
+    location_url = url_for("get_orders", order_id=order.id, _external=True)
 
+    return jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
+
+
+######################################################################
+# UPDATE AN EXISTING ORDER
+######################################################################
+@app.route("/orders/<int:order_id>", methods=["PUT"])
+def update_orders(order_id):
+    """
+    Update an Order
+
+    This endpoint will update an Order based the body that is posted
+    """
+    app.logger.info("Request to update order with id: %s", order_id)
+    check_content_type("application/json")
+
+    # See if the order exists and abort if it doesn't
+    order = Order.find(order_id)
+    if not order:
+        abort(status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found.")
+
+    # Update from the json in the body of the request
+    order.deserialize(request.get_json())
+    order.id = order_id
+    order.update()
+
+    return jsonify(order.serialize()), status.HTTP_200_OK
+
+
+######################################################################
+# ADD AN ORDERITEM TO AN ORDER
+######################################################################
+@app.route("/orders/<int:order_id>/orderitems", methods=["POST"])
+def create_orderitems(order_id):
+    """
+    Create an OrderItem on an Order
+
+    This endpoint will add an orderitem to an order
+    """
+    app.logger.info("Request to create an OrderItem for Order with id: %s", order_id)
+    check_content_type("application/json")
+
+    # See if the order exists and abort if it doesn't
+    order = Order.find(order_id)
+    if not order:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Order with id '{order_id}' could not be found.",
+        )
+
+    # Create an orderitem from the json data
+    orderitem = OrderItem()
+    orderitem.deserialize(request.get_json())
+
+    # Append the orderitem to the order
+    order.orderitem.append(orderitem)
+    order.update()
+
+    # Prepare a message to return
+    message = orderitem.serialize()
+
+    # Send the location to GET the new item
+    location_url = url_for(
+        "get_orderitems", order_id=order.id, orderitem_id=orderitem.id, _external=True
+    )
     return jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
 
 
@@ -197,6 +264,37 @@ def list_orderitems(order_id):
     results = [orderitem.serialize() for orderitem in order.orderitems]
 
     return jsonify(results), status.HTTP_200_OK
+  
+
+######################################################################
+# UPDATE AN ORDERITEM
+######################################################################
+@app.route("/orders/<int:order_id>/orderitems/<int:orderitem_id>", methods=["PUT"])
+def update_orderitems(order_id, orderitem_id):
+    """
+    Update an OrderItem
+
+    This endpoint will update an OrderItem based the body that is posted
+    """
+    app.logger.info(
+        "Request to update OrderItem %s for Order id: %s", (orderitem_id, order_id)
+    )
+    check_content_type("application/json")
+
+    # See if the orderItem exists and abort if it doesn't
+    orderItem = OrderItem.find(orderitem_id)
+    if not orderItem:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Order with id '{orderitem_id}' could not be found.",
+        )
+
+    # Update from the json in the body of the request
+    orderItem.deserialize(request.get_json())
+    orderItem.id = orderitem_id
+    orderItem.update()
+
+    return jsonify(orderItem.serialize()), status.HTTP_200_OK
 
 
 ######################################################################

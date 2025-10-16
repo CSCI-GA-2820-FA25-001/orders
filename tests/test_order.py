@@ -25,7 +25,7 @@ import os
 from unittest import TestCase
 from unittest.mock import patch
 from wsgi import app
-from service.models import Order, OrderItem, DataValidationError, db
+from service.models import Order, OrderItem, DataValidationError, db, Status
 from tests.factories import OrderFactory, OrderItemFactory
 from datetime import datetime, timedelta
 
@@ -106,6 +106,26 @@ class TestOrder(TestCase):
         fresh = Order.find(order.id)
         self.assertEqual(len(fresh.orderitem), 3)
         self.assertEqual(str(fresh.total_amount), "19.48")
+
+    def test_list_all_orders(self):
+        """It should List all Orders in the database"""
+        orders = Order.all()
+        self.assertEqual(orders, [])
+        for order in OrderFactory.create_batch(5):
+            order.create()
+        # Assert that there are not 5 orders in the database
+        orders = Order.all()
+        self.assertEqual(len(orders), 5)
+
+    def test_find_by_customer_id(self):
+        """It should Find an Order by customer_id"""
+        order = OrderFactory()
+        order.create()
+
+        # Fetch it back by customer_id
+        same_order = Order.find_by_customer_id(order.customer_id)[0]
+        self.assertEqual(same_order.id, order.id)
+        self.assertEqual(same_order.customer_id, order.customer_id)
     
     def test_read_order(self):
         """It should Read an order"""
@@ -186,3 +206,27 @@ class TestOrder(TestCase):
         """It should not Deserialize an orderitem with a TypeError"""
         orderitem = OrderItem()
         self.assertRaises(DataValidationError, orderitem.deserialize, [])
+
+    def test_update_order(self):
+        """It should Update an order"""
+        order = OrderFactory(status=Status.CANCELED)
+        order.create()
+        # Assert that it was assigned an id and shows up in the database
+        self.assertIsNotNone(order.id)
+        self.assertEqual(order.status, Status.CANCELED)
+
+        # Fetch it back
+        order = Order.find(order.id)
+        order.status = Status.FULFILLED
+        order.update()
+
+        # Fetch it back again
+        order = Order.find(order.id)
+        self.assertEqual(order.status, Status.FULFILLED)
+
+    @patch("service.models.db.session.commit")
+    def test_update_order_failed(self, exception_mock):
+        """It should not update an Order on database error"""
+        exception_mock.side_effect = Exception()
+        order = OrderFactory()
+        self.assertRaises(DataValidationError, order.update)
