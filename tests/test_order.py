@@ -126,7 +126,7 @@ class TestOrder(TestCase):
         same_order = Order.find_by_customer_id(order.customer_id)[0]
         self.assertEqual(same_order.id, order.id)
         self.assertEqual(same_order.customer_id, order.customer_id)
-    
+
     def test_read_order(self):
         """It should Read an order"""
         fake_order = OrderFactory()
@@ -152,6 +152,15 @@ class TestOrder(TestCase):
         """It should return None when the order id does not exist"""
         missing_id = 99999999  # unlikely to exist
         self.assertIsNone(Order.find(missing_id))
+
+    def test_delete_an_order(self):
+        """It should Delete an Order"""
+        order = OrderFactory()
+        order.create()
+        self.assertEqual(len(Order.all()), 1)
+        # delete the order and make sure it isn't in the database
+        order.delete()
+        self.assertEqual(len(Order.all()), 0)
 
     def test_serialize_an_order(self):
         """It should Serialize an order"""
@@ -230,3 +239,17 @@ class TestOrder(TestCase):
         exception_mock.side_effect = Exception()
         order = OrderFactory()
         self.assertRaises(DataValidationError, order.update)
+
+
+######################################################################
+#  T E S T   E X C E P T I O N   H A N D L E R S
+######################################################################
+class TestExceptionHandlers(TestCase):
+    """Order Model Exception Handlers"""
+
+    @patch("service.models.db.session.commit")
+    def test_delete_exception(self, exception_mock):
+        """It should catch a delete exception"""
+        exception_mock.side_effect = Exception()
+        order = OrderFactory()
+        self.assertRaises(DataValidationError, order.delete)
