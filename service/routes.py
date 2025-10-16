@@ -138,6 +138,7 @@ def create_orders():
 
     return jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
 
+
 ######################################################################
 # DELETE AN ORDER
 ######################################################################
@@ -158,7 +159,8 @@ def delete_orders(order_id):
 
     app.logger.info("Order with ID: %d delete complete.", order_id)
     return {}, status.HTTP_204_NO_CONTENT
-    
+
+
 #############################################################################
 # RETRIEVE AN ORDERITEM FROM ORDER
 ######################################################################
