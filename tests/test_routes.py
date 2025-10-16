@@ -112,7 +112,7 @@ class TestOrderService(TestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = resp.get_json()
         self.assertEqual(data[0]["customer_id"], orders[1].customer_id)
-    
+
     def test_create_order(self):
         """It should Create a new Order"""
         order = OrderFactory()
@@ -260,3 +260,40 @@ class TestOrderService(TestCase):
         self.assertEqual(data["price"], str(orderitem.price))
         self.assertEqual(data["quantity"], str(orderitem.quantity))
         self.assertEqual(data["line_amount"], str(orderitem.line_amount))
+
+    def test_update_orderitem(self):
+        """It should Update an orderItem on an Order"""
+        # create a known address
+        order = self._create_orders(1)[0]
+        orderItem = OrderItemFactory()
+        resp = self.client.post(
+            f"{BASE_URL}/{order.id}/orderitems",
+            json=orderItem.serialize(),
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        data = resp.get_json()
+        logging.debug(data)
+        orderitem_id = data["id"]
+        data["product_id"] = "XXXX"
+
+        # send the update back
+        resp = self.client.put(
+            f"{BASE_URL}/{order.id}/orderitems/{orderitem_id}",
+            json=data,
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        # retrieve it back
+        resp = self.client.get(
+            f"{BASE_URL}/{order.id}/orderitems/{orderitem_id}",
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        logging.debug(data)
+        self.assertEqual(data["id"], orderitem_id)
+        self.assertEqual(data["order_id"], order.id)
+        self.assertEqual(data["product_id"], "XXXX")
