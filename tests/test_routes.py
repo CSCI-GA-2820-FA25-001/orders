@@ -228,6 +228,7 @@ class TestOrderService(TestCase):
         # create a known orderitem
         order = self._create_orders(1)[0]
         orderitem = OrderItemFactory()
+
         resp = self.client.post(
             f"{BASE_URL}/{order.id}/orderitems",
             json=orderitem.serialize(),

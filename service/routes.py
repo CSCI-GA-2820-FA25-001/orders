@@ -51,18 +51,18 @@ def index():
                     # Todo: uncomment once the endpoint is implemented and tested
                     "create": {"method": "POST", "url": "/orders"},
                     "get": {"method": "GET", "url": "/orders/<int:order_id>"},
-                    #                "update": {"method": "PUT", "url": "/orders/<int:order_id>"},
+                    "update": {"method": "PUT", "url": "/orders/<int:order_id>"},
                     #                "delete": {"method": "DELETE", "url": "/orders/<int:order_id>"}
                 },
                 "order_items": {
                     # Todo: uncomment once the endpoint is implemented and tested
-                    #                "list":   {"method": "GET","url": "/orders/<int:order_id>/items"},
+                    "list":   {"method": "GET","url": "/orders/<int:order_id>/items"},
                     "create": {"method": "POST", "url": "/orders/<int:order_id>/items"},
                     "get": {
                         "method": "GET",
                         "url": "/orders/<int:order_id>/items/<int:item_id>",
                     },
-                    #                "update": {"method": "PUT", "url": "/orders/<int:order_id>/items/<int:item_id>"},
+                    "update": {"method": "PUT", "url": "/orders/<int:order_id>/items/<int:item_id>"},
                     #                "delete": {"method": "DELETE", "url": "/orders/<int:order_id>/items/<int:item_id>"}
                 },
             },
@@ -243,6 +243,28 @@ def get_orderitems(order_id, orderitem_id):
 
     return jsonify(orderitem.serialize()), status.HTTP_200_OK
 
+
+######################################################################
+# LIST ORDERITEMS
+######################################################################
+@app.route("/orders/<int:order_id>/orderitems", methods=["GET"])
+def list_orderitems(order_id):
+    """Returns all of the OrderItems for an Order"""
+    app.logger.info("Request for all OrderItems for Order with id: %s", order_id)
+
+    # See if the order exists and abort if it doesn't
+    order = Order.find(order_id)
+    if not order:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Order with id '{order_id}' could not be found.",
+        )
+
+    # Get the orderitems for the order
+    results = [orderitem.serialize() for orderitem in order.orderitems]
+
+    return jsonify(results), status.HTTP_200_OK
+  
 
 ######################################################################
 # UPDATE AN ORDERITEM
