@@ -112,7 +112,7 @@ class TestOrderService(TestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = resp.get_json()
         self.assertEqual(data[0]["customer_id"], orders[1].customer_id)
-    
+
     def test_create_order(self):
         """It should Create a new Order"""
         order = OrderFactory()
@@ -186,6 +186,22 @@ class TestOrderService(TestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         updated = resp.get_json()
         self.assertEqual(updated["status"], "SHIPPED")
+
+    def test_delete_order(self):
+        """It should Delete an Order"""
+        test_order = self._create_orders(1)[0]
+        response = self.client.delete(f"{BASE_URL}/{test_order.id}")
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(len(response.data), 0)
+        # make sure they are deleted
+        response = self.client.get(f"{BASE_URL}/{test_order.id}")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_delete_non_existing_order(self):
+        """It should Delete an Order even if it doesn't exist"""
+        response = self.client.delete(f"{BASE_URL}/0")
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(len(response.data), 0)
 
     ######################################################################
     #  O R D E R I T E M  T E S T   C A S E S
