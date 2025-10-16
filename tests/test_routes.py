@@ -298,8 +298,8 @@ class TestOrderService(TestCase):
         self.assertEqual(data["id"], orderitem_id)
         self.assertEqual(data["order_id"], order.id)
         self.assertEqual(data["product_id"], "XXXX")
-        
-     def test_delete_orderitem(self):
+
+    def test_delete_orderitem(self):
         """It should Delete an OrderItem"""
         order = self._create_orders(1)[0]
         orderitem = OrderItemFactory()
@@ -326,4 +326,3 @@ class TestOrderService(TestCase):
             content_type="application/json",
         )
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
-
