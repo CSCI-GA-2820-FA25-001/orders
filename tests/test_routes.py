@@ -95,6 +95,24 @@ class TestOrderService(TestCase):
         resp = self.client.get("/")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
+    def test_get_order_list(self):
+        """It should Get a list of Orders"""
+        self._create_orders(5)
+        resp = self.client.get(BASE_URL)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 5)
+
+    def test_get_order_by_customer_id(self):
+        """It should Get an Order by customer_id"""
+        orders = self._create_orders(3)
+        resp = self.client.get(
+            BASE_URL, query_string=f"customer_id={orders[1].customer_id}"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(data[0]["customer_id"], orders[1].customer_id)
+
     def test_create_order(self):
         """It should Create a new Order"""
         order = OrderFactory()
@@ -210,6 +228,7 @@ class TestOrderService(TestCase):
         # create a known orderitem
         order = self._create_orders(1)[0]
         orderitem = OrderItemFactory()
+
         resp = self.client.post(
             f"{BASE_URL}/{order.id}/orderitems",
             json=orderitem.serialize(),
@@ -243,7 +262,44 @@ class TestOrderService(TestCase):
         self.assertEqual(data["quantity"], str(orderitem.quantity))
         self.assertEqual(data["line_amount"], str(orderitem.line_amount))
 
-    def test_delete_orderitem(self):
+    def test_update_orderitem(self):
+        """It should Update an orderItem on an Order"""
+        # create a known address
+        order = self._create_orders(1)[0]
+        orderItem = OrderItemFactory()
+        resp = self.client.post(
+            f"{BASE_URL}/{order.id}/orderitems",
+            json=orderItem.serialize(),
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        data = resp.get_json()
+        logging.debug(data)
+        orderitem_id = data["id"]
+        data["product_id"] = "XXXX"
+
+        # send the update back
+        resp = self.client.put(
+            f"{BASE_URL}/{order.id}/orderitems/{orderitem_id}",
+            json=data,
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        # retrieve it back
+        resp = self.client.get(
+            f"{BASE_URL}/{order.id}/orderitems/{orderitem_id}",
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        logging.debug(data)
+        self.assertEqual(data["id"], orderitem_id)
+        self.assertEqual(data["order_id"], order.id)
+        self.assertEqual(data["product_id"], "XXXX")
+        
+     def test_delete_orderitem(self):
         """It should Delete an OrderItem"""
         order = self._create_orders(1)[0]
         orderitem = OrderItemFactory()
@@ -270,3 +326,4 @@ class TestOrderService(TestCase):
             content_type="application/json",
         )
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+

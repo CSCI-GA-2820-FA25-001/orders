@@ -106,6 +106,45 @@ class TestOrder(TestCase):
         self.assertEqual(len(fresh.orderitem), 1)
         self.assertEqual(str(fresh.orderitem[0].line_amount), "37.50")  # 12.50 * 3
 
+    def test_list_all_orderitems(self):
+        """It should List all OrderItems in the database"""
+        items = OrderItem.all()
+        self.assertEqual(items, [])
+
+        # create two orders with 3 orderitems total
+        order1 = OrderFactory()
+        oi1 = OrderItemFactory(order=order1)
+        oi2 = OrderItemFactory(order=order1)
+        order1.orderitem.extend([oi1, oi2])
+        order1.create()
+
+        order2 = OrderFactory()
+        oi3 = OrderItemFactory(order=order2)
+        order2.orderitem.append(oi3)
+        order2.create()
+
+        # Assert that there are now 3 orderitems in the database
+        items = OrderItem.all()
+        self.assertEqual(len(items), 3)
+
+    def test_find_by_order_id(self):
+        """It should Find OrderItems by order_id"""
+        # create an order with 2 orderitems
+        order = OrderFactory()
+        oi1 = OrderItemFactory(order=order)
+        oi2 = OrderItemFactory(order=order)
+        order.orderitem.extend([oi1, oi2])
+        order.create()
+
+        # Fetch them back by order_id
+        same_items = OrderItem.find_by_order_id(order.id)
+        self.assertEqual(len(same_items), 2)
+        returned_ids = {item.id for item in same_items}
+        self.assertTrue({oi1.id, oi2.id}.issubset(returned_ids))
+
+        # Unknown order_id should return empty list
+        self.assertEqual(OrderItem.find_by_order_id(99999999), [])
+    
     def test_read_orderitem(self):
         """It should Read an orderitem"""
 
@@ -157,7 +196,6 @@ class TestOrder(TestCase):
 
     def test_serialize_an_orderitem(self):
         """It should Serialize an orderitem"""
-
         orderitem = OrderItemFactory()
         serial_orderitem = orderitem.serialize()
 
@@ -170,7 +208,6 @@ class TestOrder(TestCase):
 
     def test_deserialize_an_orderitem(self):
         """It should Deserialize an orderitem"""
-
         orderitem = OrderItemFactory()
         orderitem.create()
         new_orderitem = OrderItem()
@@ -181,3 +218,37 @@ class TestOrder(TestCase):
         self.assertEqual(new_orderitem.price, orderitem.price)
         self.assertEqual(new_orderitem.quantity, orderitem.quantity)
         self.assertEqual(new_orderitem.line_amount, orderitem.line_amount)
+
+    def test_update_order_orderitem(self):
+        """It should Update an order's orderitem"""
+        orders = Order.all()
+        self.assertEqual(orders, [])
+
+        order = OrderFactory()
+        orderitem = OrderItemFactory(order=order)
+        order.create()
+        # Assert that it was assigned an id and shows up in the database
+        self.assertIsNotNone(order.id)
+        orders = Order.all()
+        self.assertEqual(len(orders), 1)
+
+        # Fetch it back
+        order = Order.find(order.id)
+        old_orderitem = order.orderitem[0]
+        print("%r", old_orderitem)
+
+        self.assertEqual(old_orderitem.product_id, orderitem.product_id)
+
+        # assert condition to verify it orderitem belongs to order
+        self.assertEqual(
+            old_orderitem.order_id, order.id, "OrderItem does not belong to this Order"
+        )
+
+        # Change the product_id
+        old_orderitem.product_id = "XX"
+        order.update()
+
+        # Fetch it back again
+        order = Order.find(order.id)
+        orderitem = order.orderitem[0]
+        self.assertEqual(orderitem.product_id, "XX")
