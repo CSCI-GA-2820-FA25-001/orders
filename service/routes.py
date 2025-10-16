@@ -140,7 +140,7 @@ def create_orders():
 
     return jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
 
-  
+
 ######################################################################
 # UPDATE AN EXISTING ORDER
 ######################################################################
@@ -204,8 +204,8 @@ def create_orderitems(order_id):
         "get_orderitems", order_id=order.id, orderitem_id=orderitem.id, _external=True
     )
     return jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
-  
-  
+
+
 #############################################################################
 # RETRIEVE AN ORDERITEM FROM ORDER
 ######################################################################
@@ -242,6 +242,37 @@ def get_orderitems(order_id, orderitem_id):
         )
 
     return jsonify(orderitem.serialize()), status.HTTP_200_OK
+
+
+######################################################################
+# UPDATE AN ORDERITEM
+######################################################################
+@app.route("/orders/<int:order_id>/orderitems/<int:orderitem_id>", methods=["PUT"])
+def update_orderitems(order_id, orderitem_id):
+    """
+    Update an OrderItem
+
+    This endpoint will update an OrderItem based the body that is posted
+    """
+    app.logger.info(
+        "Request to update OrderItem %s for Order id: %s", (orderitem_id, order_id)
+    )
+    check_content_type("application/json")
+
+    # See if the orderItem exists and abort if it doesn't
+    orderItem = OrderItem.find(orderitem_id)
+    if not orderItem:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Order with id '{orderitem_id}' could not be found.",
+        )
+
+    # Update from the json in the body of the request
+    orderItem.deserialize(request.get_json())
+    orderItem.id = orderitem_id
+    orderItem.update()
+
+    return jsonify(orderItem.serialize()), status.HTTP_200_OK
 
 
 ######################################################################
