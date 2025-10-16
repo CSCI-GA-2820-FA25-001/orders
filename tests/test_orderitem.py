@@ -174,8 +174,15 @@ class TestOrder(TestCase):
         order = Order.find(order.id)
         old_orderitem = order.orderitem[0]
         print("%r", old_orderitem)
+
         self.assertEqual(old_orderitem.product_id, orderitem.product_id)
-        # Change the city
+
+        # assert condition to verify it orderitem belongs to order
+        self.assertEqual(
+            old_orderitem.order_id, order.id, "OrderItem does not belong to this Order"
+        )
+
+        # Change the product_id
         old_orderitem.product_id = "XX"
         order.update()
 
