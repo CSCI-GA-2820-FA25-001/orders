@@ -52,7 +52,7 @@ def index():
                     "create": {"method": "POST", "url": "/orders"},
                     "get": {"method": "GET", "url": "/orders/<int:order_id>"},
                     "update": {"method": "PUT", "url": "/orders/<int:order_id>"},
-                    #"delete": {"method": "DELETE", "url": "/orders/<int:order_id>"}
+                    "delete": {"method": "DELETE", "url": "/orders/<int:order_id>"}
                 },
                 "order_items": {
                     # Todo: uncomment once the endpoint is implemented and tested
