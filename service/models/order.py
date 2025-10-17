@@ -1,22 +1,16 @@
 """
-Models for Order
-
-All of the models are stored in this module
-"""
-
-"""
 Persistent Base class for database CRUD functions
 """
 
 import logging
 from enum import Enum
 from decimal import Decimal, InvalidOperation
+from datetime import datetime
 from .persistent_base import db, PersistentBase, DataValidationError
 from .orderitem import OrderItem
-from datetime import datetime
+
 
 logger = logging.getLogger("flask.app")
-
 
 ######################################################################
 #  O R D E R   M O D E L
@@ -49,6 +43,7 @@ class Order(db.Model, PersistentBase):
 
     @property
     def total_amount(self):
+        """Add a computed property for calculating total amount of the order"""
         return sum((i.line_amount or 0) for i in self.orderitem)
 
     # Database auditing fields
@@ -123,7 +118,7 @@ class Order(db.Model, PersistentBase):
 
         except KeyError as error:
             raise DataValidationError(
-                "Invalid OrderItem: missing " + error.args[0]
+                "Invalid Order: missing " + error.args[0]
             ) from error
 
         except (InvalidOperation, ValueError, TypeError) as error:
@@ -134,18 +129,6 @@ class Order(db.Model, PersistentBase):
     ##################################################
     # CLASS METHODS
     ##################################################
-
-    @classmethod
-    def all(cls):
-        """Returns all of the Orders in the database"""
-        logger.info("Processing all Orders")
-        return cls.query.all()
-
-    @classmethod
-    def find(cls, by_id):
-        """Finds a Order by it's ID"""
-        logger.info("Processing lookup for id %s ...", by_id)
-        return cls.query.session.get(cls, by_id)
 
     @classmethod
     def find_by_customer_id(cls, customer_id):

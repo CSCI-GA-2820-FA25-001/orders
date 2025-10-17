@@ -23,7 +23,7 @@ from unittest import TestCase
 from wsgi import app
 from tests.factories import OrderFactory, OrderItemFactory
 from service.common import status  # HTTP Status Codes
-from service.models import db, Order, OrderItem, Status, DataValidationError
+from service.models import db, Order
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
@@ -134,7 +134,6 @@ class TestOrderService(TestCase):
             new_order["status"], order.status.name, "Status does not match"
         )
 
-        # Todo: Uncomment this code when get_orders is implemented
         # Check that the location header was correct by getting it
         resp = self.client.get(location, content_type="application/json")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
@@ -206,6 +205,32 @@ class TestOrderService(TestCase):
     ######################################################################
     #  O R D E R I T E M  T E S T   C A S E S
     ######################################################################
+
+    def test_get_orderitem_list(self):
+        """It should Get a list of Orderitems"""
+        # add two orderitems to order
+        order = self._create_orders(1)[0]
+        orderitem_list = OrderItemFactory.create_batch(2)
+
+        # Create orderitem 1
+        resp = self.client.post(
+            f"{BASE_URL}/{order.id}/orderitems", json=orderitem_list[0].serialize()
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        # Create orderitem 2
+        resp = self.client.post(
+            f"{BASE_URL}/{order.id}/orderitems", json=orderitem_list[1].serialize()
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        # get the list back and make sure there are 2
+        resp = self.client.get(f"{BASE_URL}/{order.id}/orderitems")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        data = resp.get_json()
+        self.assertEqual(len(data), 2)
+
     def test_add_orderitem(self):
         """It should Add an orderitem to an order"""
         order = self._create_orders(1)[0]
@@ -279,13 +304,13 @@ class TestOrderService(TestCase):
         self.assertEqual(data["line_amount"], str(orderitem.line_amount))
 
     def test_update_orderitem(self):
-        """It should Update an orderItem on an Order"""
-        # create a known address
+        """It should Update an orderitem on an Order"""
+        # create a known orderitem
         order = self._create_orders(1)[0]
-        orderItem = OrderItemFactory()
+        orderitem = OrderItemFactory()
         resp = self.client.post(
             f"{BASE_URL}/{order.id}/orderitems",
-            json=orderItem.serialize(),
+            json=orderitem.serialize(),
             content_type="application/json",
         )
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
@@ -342,3 +367,37 @@ class TestOrderService(TestCase):
             content_type="application/json",
         )
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_get_orderitem_not_found(self):
+        """It should return 404 for non-existent orderitem"""
+        order = self._create_orders(1)[0]
+        resp = self.client.get(f"{BASE_URL}/{order.id}/orderitems/999999")
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_get_orderitem_order_not_found(self):
+        """It should return 404 when order doesn't exist"""
+        resp = self.client.get(f"{BASE_URL}/999999/orderitems/1")
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_list_orderitems_order_not_found(self):
+        """It should return 404 when trying to list orderitems for non-existent order"""
+        response = self.client.get(f"{BASE_URL}/999999/orderitems")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_bad_request(self):
+        """It should not Create when sending the wrong data"""
+        resp = self.client.post(BASE_URL, json={"name": "not enough data"})
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_unsupported_media_type(self):
+        """It should not Create when sending wrong media type"""
+        order = OrderFactory()
+        resp = self.client.post(
+            BASE_URL, json=order.serialize(), content_type="test/html"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+
+    def test_method_not_allowed(self):
+        """It should not allow an illegal method call"""
+        resp = self.client.put(BASE_URL, json={"not": "today"})
+        self.assertEqual(resp.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)

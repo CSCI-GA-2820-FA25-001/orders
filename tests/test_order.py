@@ -22,12 +22,12 @@ Test cases for Order Model
 
 import logging
 import os
+from datetime import timedelta
 from unittest import TestCase
 from unittest.mock import patch
 from wsgi import app
 from service.models import Order, OrderItem, DataValidationError, db, Status
 from tests.factories import OrderFactory, OrderItemFactory
-from datetime import datetime, timedelta
 
 
 DATABASE_URI = os.getenv(
@@ -92,6 +92,31 @@ class TestOrder(TestCase):
         # created_at should be the same as updated_at when inserting to db
         self.assertEqual(order.created_at, order.updated_at)
         self.assertEqual(order.orderitem, [])
+
+    def test_add_a_order(self):
+        """It should Create an order and add it to the database"""
+        orders = Order.all()
+        self.assertEqual(orders, [])
+        order = OrderFactory()
+        order.create()
+        # Assert that it was assigned an id and shows up in the database
+        self.assertIsNotNone(order.id)
+        orders = Order.all()
+        self.assertEqual(len(orders), 1)
+
+    @patch("service.models.db.session.commit")
+    def test_add_order_failed(self, exception_mock):
+        """It should not create an Order on database error"""
+        exception_mock.side_effect = Exception()
+        order = OrderFactory()
+        self.assertRaises(DataValidationError, order.create)
+
+    @patch("service.models.db.session.commit")
+    def test_delete_order_failed(self, exception_mock):
+        """It should not delete an Order on database error"""
+        exception_mock.side_effect = Exception()
+        order = OrderFactory()
+        self.assertRaises(DataValidationError, order.delete)
 
     def test_total_amount_computed(self):
         """It should compute an Order's total_amount as the sum of all item line_amount values"""
