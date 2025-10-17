@@ -23,9 +23,8 @@ Test cases for OrderItem Model
 import logging
 import os
 from unittest import TestCase
-from unittest.mock import patch
 from wsgi import app
-from service.models import Order, OrderItem, DataValidationError, db
+from service.models import Order, OrderItem, db
 from tests.factories import OrderFactory, OrderItemFactory
 
 DATABASE_URI = os.getenv(
@@ -98,7 +97,7 @@ class TestOrder(TestCase):
         """It should compute line_amount as price multiplied by quantity for an OrderItem"""
 
         order = OrderFactory()
-        orderitem = OrderItemFactory(order=order, price="12.50", quantity=3)
+        _ = OrderItemFactory(order=order, price="12.50", quantity=3)
 
         order.create()
 
@@ -144,7 +143,7 @@ class TestOrder(TestCase):
 
         # Unknown order_id should return empty list
         self.assertEqual(OrderItem.find_by_order_id(99999999), [])
-    
+
     def test_read_orderitem(self):
         """It should Read an orderitem"""
 

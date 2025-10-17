@@ -1,16 +1,10 @@
 """
-Models for OrderItem
-
-All of the models are stored in this module
-"""
-
-"""
 Persistent Base class for database CRUD functions
 """
 
+from decimal import Decimal
 import logging
 from .persistent_base import db, PersistentBase, DataValidationError
-from decimal import Decimal, InvalidOperation
 
 logger = logging.getLogger("flask.app")
 
@@ -36,6 +30,7 @@ class OrderItem(db.Model, PersistentBase):
 
     @property
     def line_amount(self):
+        """Add a computed property for calculating line amount of the orderitem"""
         return self.price * self.quantity
 
     def __repr__(self):
@@ -65,17 +60,15 @@ class OrderItem(db.Model, PersistentBase):
             self.price = Decimal(str(data["price"]))
             self.quantity = int(data["quantity"])
 
-            parsed_line = data["line_amount"]
             computed_line = self.price * self.quantity
 
-            if parsed_line is not None:
-
-                if Decimal(str(parsed_line)) != computed_line:
-                    logger.debug(
-                        "Invalid attribute: Parsed line_amount %s not equals to computed line_amount %s",
-                        parsed_line,
-                        computed_line,
+            if "line_amount" in data and data["line_amount"] is not None:
+                parsed = Decimal(str(data["line_amount"]))
+                if parsed != computed_line:
+                    raise DataValidationError(
+                        f"Invalid OrderItem: line_amount {parsed} != price*quantity {computed_line}"
                     )
+
         except AttributeError as error:
             raise DataValidationError("Invalid attribute: " + error.args[0]) from error
         except KeyError as error:
@@ -93,18 +86,6 @@ class OrderItem(db.Model, PersistentBase):
     ##################################################
     # CLASS METHODS
     ##################################################
-
-    @classmethod
-    def all(cls):
-        """Returns all of the OrderItems in the database"""
-        logger.info("Processing all OrderItems")
-        return cls.query.all()
-
-    @classmethod
-    def find(cls, by_id):
-        """Finds a OrderItem by it's ID"""
-        logger.info("Processing lookup for id %s ...", by_id)
-        return cls.query.session.get(cls, by_id)
 
     @classmethod
     def find_by_order_id(cls, order_id):

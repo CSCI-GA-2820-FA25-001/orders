@@ -21,7 +21,7 @@ This microservice handles the lifecycle of Orders and OrderItems
 """
 from flask import jsonify, request, url_for, abort
 from flask import current_app as app  # Import Flask application
-from service.models import Order, OrderItem, Status
+from service.models import Order, OrderItem
 from service.common import status  # HTTP Status Codes
 
 
@@ -48,23 +48,31 @@ def index():
             endpoints={
                 "orders": {
                     "list": {"method": "GET", "url": "/orders"},
-                    # Todo: uncomment once the endpoint is implemented and tested
                     "create": {"method": "POST", "url": "/orders"},
                     "get": {"method": "GET", "url": "/orders/<int:order_id>"},
                     "update": {"method": "PUT", "url": "/orders/<int:order_id>"},
-                    "delete": {"method": "DELETE", "url": "/orders/<int:order_id>"}
+                    "delete": {"method": "DELETE", "url": "/orders/<int:order_id>"},
                 },
                 "order_items": {
-                    "list":   {"method": "GET","url": "/orders/<int:order_id>/items"},
-                    "create": {"method": "POST", "url": "/orders/<int:order_id>/items"},
+                    "list": {
+                        "method": "GET",
+                        "url": "/orders/<int:order_id>/orderitems",
+                    },
+                    "create": {
+                        "method": "POST",
+                        "url": "/orders/<int:order_id>/orderitems",
+                    },
                     "get": {
                         "method": "GET",
-                        "url": "/orders/<int:order_id>/items/<int:item_id>",
+                        "url": "/orders/<int:order_id>/orderitems/<int:orderitem_id>",
                     },
-                    "update": {"method": "PUT", "url": "/orders/<int:order_id>/items/<int:item_id>"},
+                    "update": {
+                        "method": "PUT",
+                        "url": "/orders/<int:order_id>/orderitems/<int:orderitem_id>",
+                    },
                     "delete": {
                         "method": "DELETE",
-                        "url": "/orders/<int:order_id>/items/<int:item_id>",
+                        "url": "/orders/<int:order_id>/orderitems/<int:orderitem_id>",
                     },
                 },
             },
@@ -137,7 +145,6 @@ def create_orders():
 
     # Create a message to return
     message = order.serialize()
-    # Todo; uncomment this code when get_orders is implemented
     location_url = url_for("get_orders", order_id=order.id, _external=True)
 
     return jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
@@ -267,7 +274,7 @@ def get_orderitems(order_id, orderitem_id):
 
     return jsonify(orderitem.serialize()), status.HTTP_200_OK
 
-  
+
 ######################################################################
 # UPDATE AN ORDERITEM
 ######################################################################
@@ -283,20 +290,20 @@ def update_orderitems(order_id, orderitem_id):
     )
     check_content_type("application/json")
 
-    # See if the orderItem exists and abort if it doesn't
-    orderItem = OrderItem.find(orderitem_id)
-    if not orderItem:
+    # See if the orderitem exists and abort if it doesn't
+    orderitem = OrderItem.find(orderitem_id)
+    if not orderitem:
         abort(
             status.HTTP_404_NOT_FOUND,
             f"Order with id '{orderitem_id}' could not be found.",
         )
 
     # Update from the json in the body of the request
-    orderItem.deserialize(request.get_json())
-    orderItem.id = orderitem_id
-    orderItem.update()
+    orderitem.deserialize(request.get_json())
+    orderitem.id = orderitem_id
+    orderitem.update()
 
-    return jsonify(orderItem.serialize()), status.HTTP_200_OK
+    return jsonify(orderitem.serialize()), status.HTTP_200_OK
 
 
 ######################################################################
@@ -338,10 +345,10 @@ def list_orderitems(order_id):
         )
 
     # Get the orderitems for the order
-    results = [orderitem.serialize() for orderitem in order.orderitems]
+    results = [orderitem.serialize() for orderitem in order.orderitem]
 
     return jsonify(results), status.HTTP_200_OK
-  
+
 
 ######################################################################
 #  U T I L I T Y   F U N C T I O N S
