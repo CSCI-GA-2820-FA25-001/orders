@@ -55,7 +55,6 @@ def index():
                     "delete": {"method": "DELETE", "url": "/orders/<int:order_id>"}
                 },
                 "order_items": {
-                    # Todo: uncomment once the endpoint is implemented and tested
                     "list":   {"method": "GET","url": "/orders/<int:order_id>/items"},
                     "create": {"method": "POST", "url": "/orders/<int:order_id>/items"},
                     "get": {
