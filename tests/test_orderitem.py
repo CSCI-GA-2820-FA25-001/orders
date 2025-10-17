@@ -171,6 +171,29 @@ class TestOrder(TestCase):
         self.assertEqual(found_orderitem.quantity, orderitem.quantity)
         self.assertEqual(found_orderitem.line_amount, orderitem.line_amount)
 
+    def test_delete_order_orderitem(self):
+        """It should Delete an orders orderitem"""
+        orders = Order.all()
+        self.assertEqual(orders, [])
+
+        order = OrderFactory()
+        orderitem = OrderItemFactory(order=order)
+        order.create()
+        # Assert that it was assigned an id and shows up in the database
+        self.assertIsNotNone(order.id)
+        orders = Order.all()
+        self.assertEqual(len(orders), 1)
+
+        # Fetch it back
+        order = Order.find(order.id)
+        orderitem = order.orderitem[0]
+        orderitem.delete()
+        order.update()
+
+        # Fetch it back again
+        order = Order.find(order.id)
+        self.assertEqual(len(order.orderitem), 0)
+
     def test_serialize_an_orderitem(self):
         """It should Serialize an orderitem"""
         orderitem = OrderItemFactory()
