@@ -24,6 +24,7 @@ from wsgi import app
 from tests.factories import OrderFactory, OrderItemFactory
 from service.common import status  # HTTP Status Codes
 from service.models import db, Order
+from service.common import status as http_status
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
@@ -201,6 +202,9 @@ class TestOrderService(TestCase):
         response = self.client.delete(f"{BASE_URL}/0")
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(len(response.data), 0)
+
+    from datetime import datetime
+    
 
     ######################################################################
     #  O R D E R I T E M  T E S T   C A S E S
