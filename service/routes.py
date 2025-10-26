@@ -20,10 +20,11 @@ Order and OrderItem Service
 This microservice handles the lifecycle of Orders and OrderItems
 """
 from flask import jsonify, request, url_for, abort
-from flask import current_app as app  # Import Flask application
+from flask import current_app as app
 from service.models import Order, OrderItem
 from service.common import status  # HTTP Status Codes
-from service.common import status as http_status
+from service.common.order_status import Status
+from datetime import datetime, timedelta
 
 
 ######################################################################
@@ -94,7 +95,7 @@ def list_orders():
     customer_id = request.args.get("customer_id")
     created_at = request.args.get("created_at")
 
-    query= Order.query
+    query = Order.query
 
     if status_arg:
         try:
@@ -102,7 +103,7 @@ def list_orders():
             query = query.filter(Order.status == status_enum)
         except KeyError:
             abort(
-                http_status.HTTP_400_BAD_REQUEST,
+                status.HTTP_400_BAD_REQUEST,  # Use status (HTTP) not http_status
                 f"Unknown status '{status_arg}'. Valid statuses: {[s.name for s in Status]}",
             )
 
@@ -114,7 +115,7 @@ def list_orders():
             dt = datetime.fromisoformat(created_at)
         except ValueError:
             abort(
-                http_status.HTTP_400_BAD_REQUEST,
+                status.HTTP_400_BAD_REQUEST,  # Use status (HTTP)
                 "Invalid date format for created_at. Use ISO 8601 like '2025-10-20' or '2025-10-20T15:30:00'.",
             )
 
@@ -124,13 +125,10 @@ def list_orders():
             query = query.filter(Order.created_at >= start, Order.created_at < end)
         else:
             query = query.filter(Order.created_at == dt)    
-            
-                        
 
     orders = query.all()
     results = [order.serialize() for order in orders]
-    return jsonify(results), http_status.HTTP_200_OK
-
+    return jsonify(results), status.HTTP_200_OK  # Use status (HTTP)
 
 ######################################################################
 # RETRIEVE AN ORDER
