@@ -351,6 +351,56 @@ def list_orderitems(order_id):
 
 
 ######################################################################
+# ACTIONS ON AN ORDER
+######################################################################
+
+
+@app.route("/orders/<int:order_id>/cancel", methods=["PUT"])
+def cancel_order(order_id):
+    """
+    Cancel an existing order that is still in CREATED state.
+    Changing the Status to "Cancelled".
+    """
+    app.logger.info(f"Request to cancel Order with id={order_id}")
+
+    order = Order.find(order_id)
+
+    if not order:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Order with id '{order_id}' could not be found.",
+        )
+
+    if order.status == status.CANCELLED:
+        app.logger.warning("Order %s is already canceled", order_id)
+        abort(
+            status.HTTP_400_BAD_REQUEST,
+            description=f"Order with id '{order_id}' is already cancelled.",
+        )
+
+    if order.status != status.CREATED:
+        app.logger.warning(
+            "Order %s cannot be canceled from status %s", order_id, order.status
+        )
+        abort(
+            status.HTTP_409_CONFLICT,
+            description="Only orders in CREATED state can be canceled",
+        )
+
+    # Perform the cancellation
+    order.status = status.CANCELED
+    order.update()
+
+    app.logger.info("Order %s successfully canceled", order_id)
+    return jsonify(order.serialize()), status.HTTP_200_OK
+
+
+######################################################################
+# CANCEL AN ORDER
+######################################################################
+
+
+######################################################################
 #  U T I L I T Y   F U N C T I O N S
 ######################################################################
 
