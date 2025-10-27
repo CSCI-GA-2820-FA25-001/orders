@@ -406,24 +406,21 @@ class TestOrderService(TestCase):
     #  O R D E R I T E M  T E S T   C A S E S
     ######################################################################
 
+    def test_cancel_order_created(self):
+        """It should cancel an order in CREATED state"""
+        order = self._create_orders(1)[0]
+        resp = self.client.put(f"/orders/{order.id}/cancel")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(data["status"], "CANCELED")
 
-def test_cancel_order_created(self):
-    """It should cancel an order in CREATED state"""
-    order = self._create_order(status="CREATED")
-    resp = self.client.put(f"/orders/{order.id}/cancel")
-    self.assertEqual(resp.status_code, status.HTTP_200_OK)
-    data = resp.get_json()
-    self.assertEqual(data["status"], "CANCELED")
+    def test_cancel_order_already_canceled(self):
+        """It should return 409 if order already canceled"""
+        order = self._create_orders(1)[0]
+        resp = self.client.put(f"/orders/{order.id}/cancel")
+        self.assertEqual(resp.status_code, status.HTTP_409_CONFLICT)
 
-
-def test_cancel_order_already_canceled(self):
-    """It should return 409 if order already canceled"""
-    order = self._create_order(status="CANCELED")
-    resp = self.client.put(f"/orders/{order.id}/cancel")
-    self.assertEqual(resp.status_code, status.HTTP_409_CONFLICT)
-
-
-def test_cancel_order_not_found(self):
-    """It should return 404 for non-existent order"""
-    resp = self.client.put("/orders/999/cancel")
-    self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+    def test_cancel_order_not_found(self):
+        """It should return 404 for non-existent order"""
+        resp = self.client.put("/orders/999/cancel")
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
