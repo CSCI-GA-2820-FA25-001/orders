@@ -355,18 +355,18 @@ def list_orderitems(order_id):
 ######################################################################
 
 
+######################################################################
+# CANCEL AN ORDER
+######################################################################
+
+
 @app.route("/orders/<int:order_id>/cancel", methods=["PUT"])
 def cancel_order(order_id):
-    """
-    Cancel an existing order that is still in CREATED state.
-    Changing the Status to "Canceled".
-    """
-
     order = Order.find(order_id)
-
     if not order:
         abort(404, description=f"Order {order_id} not found")
 
+    # order.status is already an Enum
     if order.status == Status.CANCELED:
         abort(409, description="Order is already canceled")
 
@@ -376,12 +376,8 @@ def cancel_order(order_id):
     # Update status
     order.status = Status.CANCELED
     order.update()
+
     return jsonify(order.serialize()), 200
-
-
-######################################################################
-# CANCEL AN ORDER
-######################################################################
 
 
 ######################################################################

@@ -23,7 +23,7 @@ from unittest import TestCase
 from wsgi import app
 from tests.factories import OrderFactory, OrderItemFactory
 from service.common import status  # HTTP Status Codes
-from service.models import db, Order
+from service.models import db, Order, Status
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
@@ -409,12 +409,24 @@ class TestOrderService(TestCase):
     def test_cancel_order_created(self):
         """It should cancel an order in CREATED state"""
         order = self._create_orders(1)[0]
+
+        # Force status to CREATED
+        order.status = Status.CREATED
+        db.session.commit()  # ensure it is persisted
+
         resp = self.client.put(f"/orders/{order.id}/cancel")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(data["status"], "CANCELED")
 
     def test_cancel_order_already_canceled(self):
         """It should return 409 if order already canceled"""
         order = self._create_orders(1)[0]
+
+        # Ensure the order is CANCELED
+        order.status = Status.CANCELED
+        db.session.commit()  # persist change
+
         resp = self.client.put(f"/orders/{order.id}/cancel")
         self.assertEqual(resp.status_code, status.HTTP_409_CONFLICT)
 
