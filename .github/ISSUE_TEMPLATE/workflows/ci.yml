@@ -1,0 +1,69 @@
+name: CI-BUILD
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URI: postgresql+psycopg://postgres:postgres@localhost:5432/postgres
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        options: >-
+          --health-cmd="pg_isready -U postgres -d postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install PostgreSQL client & build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libpq-dev python3-dev build-essential postgresql-client
+
+      - name: Upgrade pip and install pipenv
+        run: python -m pip install --upgrade pip pipenv
+
+      - name: Install dependencies
+        run: pipenv install --system --dev
+
+      - name: Wait for Postgres to be ready
+        run: |
+          for i in {1..30}; do
+            if pg_isready -h localhost -p 5432 -U postgres -d postgres; then break; fi
+            sleep 2
+            if [ "$i" -eq 30 ]; then exit 1; fi
+          done
+
+      - name: Lint (flake8 & pylint)
+        run: make lint
+
+      - name: Run tests (make test + coverage xml)
+        run: |
+          make test
+          pytest --cov=service --cov-report=xml --disable-warnings
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.xml
+          fail_ci_if_error: true
