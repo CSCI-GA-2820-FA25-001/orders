@@ -406,17 +406,19 @@ class TestOrderService(TestCase):
     #  O R D E R I T E M  T E S T   C A S E S
     ######################################################################
 
-    def test_cancel_order_already_canceled(self):
-        """It should return 409 if order already canceled"""
+    def test_cancel_order_created(self):
+        """It should cancel an order in CREATED state"""
         order = self._create_orders(1)[0]
 
-        # Ensure the order is CANCELED
-        order.status = Status.CANCELED
-        db.session.commit()
-        db.session.expire_all()
+        # Force status to CREATED
+        order.status = Status.CREATED
+        db.session.commit()  # ensure it is persisted to the db
+        db.session.expire_all()  # FORCE TO RELOAD FOR ROUTE
 
         resp = self.client.put(f"/orders/{order.id}/cancel")
-        self.assertEqual(resp.status_code, status.HTTP_409_CONFLICT)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(data["status"], "CANCELED")
 
     def test_cancel_order_already_canceled(self):
         """It should return 409 if order already canceled"""
@@ -425,6 +427,7 @@ class TestOrderService(TestCase):
         # Ensure the order is CANCELED
         order.status = Status.CANCELED
         db.session.commit()  # persist change
+        db.session.expire_all()  # <--- force reload for route
 
         resp = self.client.put(f"/orders/{order.id}/cancel")
         self.assertEqual(resp.status_code, status.HTTP_409_CONFLICT)
