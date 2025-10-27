@@ -20,9 +20,11 @@ Order and OrderItem Service
 This microservice handles the lifecycle of Orders and OrderItems
 """
 from flask import jsonify, request, url_for, abort
-from flask import current_app as app  # Import Flask application
+from flask import current_app as app
 from service.models import Order, OrderItem
 from service.common import status  # HTTP Status Codes
+from service.common.order_status import Status
+from datetime import datetime, timedelta
 
 
 ######################################################################
@@ -88,20 +90,45 @@ def index():
 def list_orders():
     """Returns all of the Orders"""
     app.logger.info("Request for Order list")
-    orders = []
 
-    # Process the query string if any
+    status_arg = request.args.get("status")
     customer_id = request.args.get("customer_id")
+    created_at = request.args.get("created_at")
+
+    query = Order.query
+
+    if status_arg:
+        try:
+            status_enum = Status[status_arg.upper()]
+            query = query.filter(Order.status == status_enum)
+        except KeyError:
+            abort(
+                status.HTTP_400_BAD_REQUEST,  # Use status (HTTP) not http_status
+                f"Unknown status '{status_arg}'. Valid statuses: {[s.name for s in Status]}",
+            )
+
     if customer_id:
-        orders = Order.find_by_customer_id(customer_id)
-    else:
-        orders = Order.all()
+        query = query.filter(Order.customer_id == customer_id)
 
-    # Return as an array of dictionaries
+    if created_at:
+        try:
+            dt = datetime.fromisoformat(created_at)
+        except ValueError:
+            abort(
+                status.HTTP_400_BAD_REQUEST,  # Use status (HTTP)
+                "Invalid date format for created_at. Use ISO 8601 like '2025-10-20' or '2025-10-20T15:30:00'.",
+            )
+
+        if len(created_at) <= 10:  # YYYY-MM-DD
+            start = datetime(dt.year, dt.month, dt.day)
+            end = start + timedelta(days=1)
+            query = query.filter(Order.created_at >= start, Order.created_at < end)
+        else:
+            query = query.filter(Order.created_at == dt)    
+
+    orders = query.all()
     results = [order.serialize() for order in orders]
-
-    return jsonify(results), status.HTTP_200_OK
-
+    return jsonify(results), status.HTTP_200_OK  # Use status (HTTP)
 
 ######################################################################
 # RETRIEVE AN ORDER

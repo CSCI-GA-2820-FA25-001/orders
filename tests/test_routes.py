@@ -24,6 +24,9 @@ from wsgi import app
 from tests.factories import OrderFactory, OrderItemFactory
 from service.common import status  # HTTP Status Codes
 from service.models import db, Order
+from service.common import status 
+from datetime import datetime
+from service.common.order_status import Status
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
@@ -201,6 +204,62 @@ class TestOrderService(TestCase):
         response = self.client.delete(f"{BASE_URL}/0")
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(len(response.data), 0)
+
+    def test_get_orders_by_status(self):
+        """GET /orders?status=SHIPPED returns only SHIPPED orders"""
+        o1 = OrderFactory()
+        o1.status = Status.SHIPPED
+        resp = self.client.post(BASE_URL, json=o1.serialize())
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        o2 = OrderFactory()
+        o2.status = Status.CREATED
+        resp = self.client.post(BASE_URL, json=o2.serialize())
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        resp = self.client.get(BASE_URL, query_string="status=SHIPPED")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertTrue(all(item["status"] == "SHIPPED" for item in data))
+
+    def test_get_orders_by_customer_id(self):
+        """GET /orders?customer_id=101 returns that customer's orders"""
+        o1 = OrderFactory()
+        o1.customer_id = "101"
+        resp = self.client.post(BASE_URL, json=o1.serialize())
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        o2 = OrderFactory()
+        o2.customer_id = "202"
+        resp = self.client.post(BASE_URL, json=o2.serialize())
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        resp = self.client.get(BASE_URL, query_string="customer_id=101")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertTrue(all(d["customer_id"] == "101" for d in data))
+
+    def test_get_orders_by_created_at(self):
+        """GET /orders?created_at=YYYY-MM-DD returns orders for that day"""
+        # create two orders on different days
+        o1 = OrderFactory()
+        o1.created_at = datetime(2020, 1, 10, 9, 0, 0)
+        resp = self.client.post(BASE_URL, json=o1.serialize())
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        o2 = OrderFactory()
+        o2.created_at = datetime(2020, 1, 11, 9, 0, 0)
+        resp = self.client.post(BASE_URL, json=o2.serialize())
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        resp = self.client.get(BASE_URL, query_string="created_at=2020-01-10")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 1)
+        self.assertTrue(data[0]["created_at"].startswith("2020-01-10"))
+    
+
+    
 
     ######################################################################
     #  O R D E R I T E M  T E S T   C A S E S
