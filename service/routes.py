@@ -21,7 +21,7 @@ This microservice handles the lifecycle of Orders and OrderItems
 """
 from flask import jsonify, request, url_for, abort
 from flask import current_app as app  # Import Flask application
-from service.models import Order, OrderItem
+from service.models import Order, OrderItem, Status
 from service.common import status  # HTTP Status Codes
 
 
@@ -359,40 +359,24 @@ def list_orderitems(order_id):
 def cancel_order(order_id):
     """
     Cancel an existing order that is still in CREATED state.
-    Changing the Status to "Cancelled".
+    Changing the Status to "Canceled".
     """
-    app.logger.info(f"Request to cancel Order with id={order_id}")
 
     order = Order.find(order_id)
 
     if not order:
-        abort(
-            status.HTTP_404_NOT_FOUND,
-            f"Order with id '{order_id}' could not be found.",
-        )
+        abort(404, description=f"Order {order_id} not found")
 
-    if order.status == status.CANCELLED:
-        app.logger.warning("Order %s is already canceled", order_id)
-        abort(
-            status.HTTP_400_BAD_REQUEST,
-            description=f"Order with id '{order_id}' is already cancelled.",
-        )
+    if order.status == Status.CANCELED:
+        abort(409, description="Order is already canceled")
 
-    if order.status != status.CREATED:
-        app.logger.warning(
-            "Order %s cannot be canceled from status %s", order_id, order.status
-        )
-        abort(
-            status.HTTP_409_CONFLICT,
-            description="Only orders in CREATED state can be canceled",
-        )
+    if order.status != Status.CREATED:
+        abort(409, description=f"Cannot cancel order in status {order.status.name}")
 
-    # Perform the cancellation
-    order.status = status.CANCELED
+    # Update status
+    order.status = Status.CANCELED
     order.update()
-
-    app.logger.info("Order %s successfully canceled", order_id)
-    return jsonify(order.serialize()), status.HTTP_200_OK
+    return jsonify(order.serialize()), 200
 
 
 ######################################################################
