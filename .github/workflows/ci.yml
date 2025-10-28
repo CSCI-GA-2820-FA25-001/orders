@@ -1,0 +1,78 @@
+name: CI-BUILD
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: python:3.11-slim
+
+    env:
+      DATABASE_URI: postgresql+psycopg://postgres:postgres@postgres:5432/postgres
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies (build tools & libpq)
+        run: |
+          apt-get update
+          apt-get install -y libpq-dev python3-dev build-essential gcc
+
+      - name: Upgrade pip and install pipenv
+        run: python -m pip install --upgrade pip pipenv
+
+      - name: Install Python package dependencies
+        run: pipenv install --system --dev
+
+      - name: Linting
+        run: |
+          flake8 service tests --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 service tests --count --max-complexity=10 --max-line-length=127 --statistics
+          pylint service tests --max-line-length=127
+
+      - name: Wait for Postgres to be ready
+        run: |
+          for i in {1..30}; do
+            if pg_isready -h postgres -p 5432 -U postgres -d postgres; then break; fi
+            sleep 2
+            if [ "$i" -eq 30 ]; then exit 1; fi
+          done
+
+      - name: Run unit tests with PyTest
+        env:
+          DATABASE_URI: "postgresql+psycopg://postgres:postgres@postgres:5432/postgres"
+        run: pytest --pspec --cov=service --cov-fail-under=95 --cov-report=xml
+
+      - name: Install packages for Codecov to work
+        run: |
+          apt-get update
+          apt-get install -y git curl gnupg
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.xml
