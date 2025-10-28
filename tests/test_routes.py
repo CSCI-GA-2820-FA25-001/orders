@@ -21,12 +21,11 @@ import os
 import logging
 import json
 from unittest import TestCase
+from datetime import datetime
 from wsgi import app
 from tests.factories import OrderFactory, OrderItemFactory
 from service.common import status  # HTTP Status Codes
 from service.models import db, Order
-from service.common import status 
-from datetime import datetime
 from service.common.order_status import Status
 
 DATABASE_URI = os.getenv(
