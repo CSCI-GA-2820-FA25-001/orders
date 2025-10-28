@@ -23,10 +23,7 @@ from unittest import TestCase
 from wsgi import app
 from tests.factories import OrderFactory, OrderItemFactory
 from service.common import status  # HTTP Status Codes
-from service.models import db, Order
-from service.common import status 
-from datetime import datetime
-from service.common.order_status import Status
+from service.models import db, Order, Status
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
@@ -460,3 +457,38 @@ class TestOrderService(TestCase):
         """It should not allow an illegal method call"""
         resp = self.client.put(BASE_URL, json={"not": "today"})
         self.assertEqual(resp.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    ######################################################################
+    #  O R D E R I T E M  T E S T   C A S E S
+    ######################################################################
+
+    def test_cancel_order_created(self):
+        """It should cancel an order in CREATED state"""
+        order = self._create_orders(1)[0]
+
+        # Force status to CREATED
+        order.status = Status.CREATED
+        db.session.commit()  # ensure it is persisted to the db
+        db.session.expire_all()  # FORCE TO RELOAD FOR ROUTE
+
+        resp = self.client.put(f"/orders/{order.id}/cancel")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(data["status"], "CANCELED")
+
+    def test_cancel_order_already_canceled(self):
+        """It should return 409 if order already canceled"""
+        order = self._create_orders(1)[0]
+
+        # Ensure the order is CANCELED
+        order.status = Status.CANCELED
+        db.session.commit()  # persist change
+        db.session.expire_all()  # <--- force reload for route
+
+        resp = self.client.put(f"/orders/{order.id}/cancel")
+        self.assertEqual(resp.status_code, status.HTTP_409_CONFLICT)
+
+    def test_cancel_order_not_found(self):
+        """It should return 404 for non-existent order"""
+        resp = self.client.put("/orders/999/cancel")
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
