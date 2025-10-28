@@ -8,7 +8,7 @@ from decimal import Decimal, InvalidOperation
 from datetime import datetime
 from .persistent_base import db, PersistentBase, DataValidationError
 from .orderitem import OrderItem
-
+from service.common.order_status import Status
 
 logger = logging.getLogger("flask.app")
 
@@ -17,15 +17,7 @@ logger = logging.getLogger("flask.app")
 ######################################################################
 
 
-class Status(Enum):
-    """Enumeration of valid Order Statuses"""
 
-    CREATED = 0
-    PAID = 1
-    CANCELED = 2
-    SHIPPED = 3
-    FULFILLED = 4
-    REFUNDED = 5
 
 
 class Order(db.Model, PersistentBase):
