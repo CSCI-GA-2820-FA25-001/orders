@@ -3,7 +3,6 @@ Persistent Base class for database CRUD functions
 """
 
 import logging
-from enum import Enum
 from decimal import Decimal, InvalidOperation
 from datetime import datetime
 from .persistent_base import db, PersistentBase, DataValidationError
@@ -15,9 +14,6 @@ logger = logging.getLogger("flask.app")
 ######################################################################
 #  O R D E R   M O D E L
 ######################################################################
-
-
-
 
 
 class Order(db.Model, PersistentBase):

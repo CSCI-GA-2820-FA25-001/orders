@@ -4,6 +4,7 @@ Common Status Enum for Order Service
 
 from enum import Enum
 
+
 class Status(Enum):
     """Enumeration of valid Order Statuses"""
     CREATED = 0
