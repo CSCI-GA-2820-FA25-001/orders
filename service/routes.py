@@ -19,12 +19,12 @@ Order and OrderItem Service
 
 This microservice handles the lifecycle of Orders and OrderItems
 """
+from datetime import datetime, timedelta
 from flask import jsonify, request, url_for, abort
 from flask import current_app as app
 from service.models import Order, OrderItem
 from service.common import status  # HTTP Status Codes
 from service.common.order_status import Status
-from datetime import datetime, timedelta
 
 
 ######################################################################
@@ -124,7 +124,7 @@ def list_orders():
             end = start + timedelta(days=1)
             query = query.filter(Order.created_at >= start, Order.created_at < end)
         else:
-            query = query.filter(Order.created_at == dt)    
+            query = query.filter(Order.created_at == dt)
 
     orders = query.all()
     results = [order.serialize() for order in orders]
@@ -133,6 +133,8 @@ def list_orders():
 ######################################################################
 # RETRIEVE AN ORDER
 ######################################################################
+
+
 @app.route("/orders/<int:order_id>", methods=["GET"])
 def get_orders(order_id):
     """

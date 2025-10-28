@@ -20,12 +20,11 @@ Order Service API Service Test Suite
 import os
 import logging
 from unittest import TestCase
+from datetime import datetime
 from wsgi import app
 from tests.factories import OrderFactory, OrderItemFactory
 from service.common import status  # HTTP Status Codes
 from service.models import db, Order
-from service.common import status 
-from datetime import datetime
 from service.common.order_status import Status
 
 DATABASE_URI = os.getenv(
@@ -257,9 +256,6 @@ class TestOrderService(TestCase):
         data = resp.get_json()
         self.assertEqual(len(data), 1)
         self.assertTrue(data[0]["created_at"].startswith("2020-01-10"))
-    
-
-    
 
     ######################################################################
     #  O R D E R I T E M  T E S T   C A S E S
