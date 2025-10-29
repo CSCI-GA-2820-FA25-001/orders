@@ -24,6 +24,7 @@ from wsgi import app
 from tests.factories import OrderFactory, OrderItemFactory
 from service.common import status  # HTTP Status Codes
 from service.models import db, Order, Status
+from datetime import datetime
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
@@ -254,9 +255,6 @@ class TestOrderService(TestCase):
         data = resp.get_json()
         self.assertEqual(len(data), 1)
         self.assertTrue(data[0]["created_at"].startswith("2020-01-10"))
-    
-
-    
 
     ######################################################################
     #  O R D E R I T E M  T E S T   C A S E S
@@ -470,6 +468,9 @@ class TestOrderService(TestCase):
         order.status = Status.CREATED
         db.session.commit()  # ensure it is persisted to the db
         db.session.expire_all()  # FORCE TO RELOAD FOR ROUTE
+
+        print(order.status)
+        print(order.status.value)
 
         resp = self.client.put(f"/orders/{order.id}/cancel")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)

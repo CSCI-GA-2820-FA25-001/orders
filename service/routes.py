@@ -124,11 +124,12 @@ def list_orders():
             end = start + timedelta(days=1)
             query = query.filter(Order.created_at >= start, Order.created_at < end)
         else:
-            query = query.filter(Order.created_at == dt)    
+            query = query.filter(Order.created_at == dt)
 
     orders = query.all()
     results = [order.serialize() for order in orders]
     return jsonify(results), status.HTTP_200_OK  # Use status (HTTP)
+
 
 ######################################################################
 # RETRIEVE AN ORDER
