@@ -20,11 +20,12 @@ Order Service API Service Test Suite
 import os
 import logging
 from unittest import TestCase
+from datetime import datetime
 from wsgi import app
 from tests.factories import OrderFactory, OrderItemFactory
 from service.common import status  # HTTP Status Codes
-from service.models import db, Order, Status
-from datetime import datetime
+from service.models import db, Order
+from service.common.order_status import Status
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
@@ -255,6 +256,20 @@ class TestOrderService(TestCase):
         data = resp.get_json()
         self.assertEqual(len(data), 1)
         self.assertTrue(data[0]["created_at"].startswith("2020-01-10"))
+
+    def test_invalid_status_param_triggers_400(self):
+        """Unknown status -> exercise KeyError abort branch"""
+        # ensure there is at least one order so the query code runs
+        _ = self._create_orders(1)
+        resp = self.client.get(f"{BASE_URL}?status=NOT_A_STATUS")
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Unknown status", resp.get_data(as_text=True))
+
+    def test_invalid_created_at_format_triggers_400(self):
+        """Invalid created_at format -> exercise ValueError abort branch"""
+        resp = self.client.get(f"{BASE_URL}?created_at=not-a-date")
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Invalid date format", resp.get_data(as_text=True))
 
     ######################################################################
     #  O R D E R I T E M  T E S T   C A S E S
