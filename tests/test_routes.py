@@ -478,14 +478,13 @@ class TestOrderService(TestCase):
     def test_cancel_order_created(self):
         """It should cancel an order in CREATED state"""
         order = self._create_orders(1)[0]
-
-        # Force status to CREATED
-        order.status = Status.CREATED
+        # Force status to CREATED on the persisted DB object (the factory
+        # instance 'order' is not the same SQLAlchemy object that's stored
+        # in the database; we must load the persisted Order and modify it.)
+        persisted = Order.find(order.id)
+        persisted.status = Status.CREATED
         db.session.commit()  # ensure it is persisted to the db
         db.session.expire_all()  # FORCE TO RELOAD FOR ROUTE
-
-        print(order.status)
-        print(order.status.value)
 
         resp = self.client.put(f"/orders/{order.id}/cancel")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)

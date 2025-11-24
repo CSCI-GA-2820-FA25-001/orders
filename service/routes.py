@@ -22,7 +22,7 @@ This microservice handles the lifecycle of Orders and OrderItems
 from datetime import datetime, timedelta
 from flask import jsonify, request, url_for, abort
 from flask import current_app as app  # Import Flask application
-from service.models import Order, OrderItem, Status
+from service.models import Order, OrderItem
 from service.common import status  # HTTP Status Codes
 from service.common.order_status import Status
 
