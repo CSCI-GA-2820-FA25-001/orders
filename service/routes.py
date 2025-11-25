@@ -392,6 +392,7 @@ def list_orderitems(order_id):
 
 @app.route("/orders/<int:order_id>/cancel", methods=["PUT"])
 def cancel_order(order_id):
+    """Endpoint to Cancel an Order"""
     order = Order.find(order_id)
     if not order:
         abort(404, description=f"Order {order_id} not found")
