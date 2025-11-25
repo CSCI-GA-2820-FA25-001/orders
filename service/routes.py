@@ -21,7 +21,7 @@ This microservice handles the lifecycle of Orders and OrderItems
 """
 from datetime import datetime, timedelta
 from flask import jsonify, request, url_for, abort
-from flask import current_app as app
+from flask import current_app as app  # Import Flask application
 from service.models import Order, OrderItem
 from service.common import status  # HTTP Status Codes
 from service.common.order_status import Status
@@ -129,6 +129,7 @@ def list_orders():
     orders = query.all()
     results = [order.serialize() for order in orders]
     return jsonify(results), status.HTTP_200_OK  # Use status (HTTP)
+
 
 ######################################################################
 # RETRIEVE AN ORDER
@@ -377,6 +378,35 @@ def list_orderitems(order_id):
     results = [orderitem.serialize() for orderitem in order.orderitem]
 
     return jsonify(results), status.HTTP_200_OK
+
+
+######################################################################
+# ACTIONS ON AN ORDER
+######################################################################
+
+
+######################################################################
+# CANCEL AN ORDER
+######################################################################
+
+
+@app.route("/orders/<int:order_id>/cancel", methods=["PUT"])
+def cancel_order(order_id):
+    """Endpoint to Cancel an Order"""
+    order = Order.find(order_id)
+    if not order:
+        abort(404, description=f"Order {order_id} not found")
+
+    # order.status is already an Enum
+
+    if order.status != Status.CREATED:
+        abort(409, description=f"Cannot cancel order in status {order.status.name}")
+
+    # Update status
+    order.status = Status.CANCELED
+    order.update()
+
+    return jsonify(order.serialize()), 200
 
 
 ######################################################################
