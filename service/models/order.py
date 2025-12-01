@@ -18,7 +18,6 @@ logger = logging.getLogger("flask.app")
 
 class Order(db.Model, PersistentBase):
     """Class that represents an Order"""
-
     # Table Schema
     id = db.Column(db.Integer, primary_key=True)
     customer_id = db.Column(db.String(16), nullable=False)
