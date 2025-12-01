@@ -41,46 +41,8 @@ def health_check():
 ######################################################################
 @app.route("/")
 def index():
-    """Root URL response"""
-    return (
-        jsonify(
-            name="Order REST API Service",
-            version="1.0",
-            paths=url_for("list_orders", _external=True),
-            endpoints={
-                "orders": {
-                    "list": {"method": "GET", "url": "/orders"},
-                    "create": {"method": "POST", "url": "/orders"},
-                    "get": {"method": "GET", "url": "/orders/<int:order_id>"},
-                    "update": {"method": "PUT", "url": "/orders/<int:order_id>"},
-                    "delete": {"method": "DELETE", "url": "/orders/<int:order_id>"},
-                },
-                "order_items": {
-                    "list": {
-                        "method": "GET",
-                        "url": "/orders/<int:order_id>/orderitems",
-                    },
-                    "create": {
-                        "method": "POST",
-                        "url": "/orders/<int:order_id>/orderitems",
-                    },
-                    "get": {
-                        "method": "GET",
-                        "url": "/orders/<int:order_id>/orderitems/<int:orderitem_id>",
-                    },
-                    "update": {
-                        "method": "PUT",
-                        "url": "/orders/<int:order_id>/orderitems/<int:orderitem_id>",
-                    },
-                    "delete": {
-                        "method": "DELETE",
-                        "url": "/orders/<int:order_id>/orderitems/<int:orderitem_id>",
-                    },
-                },
-            },
-        ),
-        status.HTTP_200_OK,
-    )
+    """Base URL for our service"""
+    return app.send_static_file("index.html")
 
 
 ######################################################################
