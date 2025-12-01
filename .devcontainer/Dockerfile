@@ -12,8 +12,8 @@ RUN cd /tmp; bash ./install-tools.sh
 # Set up the Python development environment
 WORKDIR /app
 COPY Pipfile Pipfile.lock ./
-RUN python -m pip install --upgrade pip pipenv && \
-    pipenv install --system --dev
+RUN sudo python -m pip install --upgrade pip pipenv && \
+    sudo pipenv install --system --dev
 
 
 #Image for a TDD
