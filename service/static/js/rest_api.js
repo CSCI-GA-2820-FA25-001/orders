@@ -9,8 +9,6 @@ $(function () {
         $("#order_id").val(res.id);
         $("#customer_id").val(res.customer_id);
         $("#order_status").val(res.status);
-        
-
         $("#order_total").val(res.total_amount);
         $("#created_at").val(res.created_at);
         $("#updated_at").val(res.updated_at);
@@ -20,8 +18,7 @@ $(function () {
     function clear_form_data() {
         $("#order_id").val("");
         $("#customer_id").val("");
-        $("#order_status").val("");
-
+        $("#order_status").val("CREATED");
         $("#order_total").val("");
         $("#created_at").val("");
         $("#updated_at").val("");
@@ -32,6 +29,49 @@ $(function () {
         $("#flash_message").empty();
         $("#flash_message").append(message);
     }
+
+    // ****************************************
+    // Create an Order
+    // ****************************************
+
+    $("#create-btn").click(function () {
+
+        let customer_id = $("#customer_id").val();
+        let order_status = $("#order_status").val();
+
+        let data = {
+            "customer_id": customer_id,
+            "status": order_status
+        };
+
+        $("#flash_message").empty();
+        
+        let ajax = $.ajax({
+            type: "POST",
+            url: "/orders",
+            contentType: "application/json",
+            data: JSON.stringify(data),
+        });
+
+        ajax.done(function(res){
+            update_form_data(res)
+            flash_message("Success")
+        });
+
+        ajax.fail(function(res){
+            flash_message(res.responseJSON.message)
+        });
+    });
+
+    // ****************************************
+    // Clear Form
+    // ****************************************
+
+    $("#clear-btn").click(function () {
+        $("#order_id").val("");
+        $("#flash_message").empty();
+        clear_form_data()
+    });
 
 
 }  );
