@@ -495,8 +495,9 @@ class TestOrderService(TestCase):
         """It should return 409 if order already canceled"""
         order = self._create_orders(1)[0]
 
-        # Ensure the order is CANCELED
-        order.status = Status.CANCELED
+        # Fetch the persisted order and set it to CANCELED
+        persisted = Order.find(order.id)
+        persisted.status = Status.CANCELED
         db.session.commit()  # persist change
         db.session.expire_all()  # <--- force reload for route
 
