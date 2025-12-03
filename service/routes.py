@@ -359,8 +359,6 @@ def cancel_order(order_id):
     if not order:
         abort(404, description=f"Order {order_id} not found")
 
-    # order.status is already an Enum
-
     if order.status != Status.CREATED:
         abort(409, description=f"Cannot cancel order in status {order.status.name}")
 
