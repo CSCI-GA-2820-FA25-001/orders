@@ -38,10 +38,14 @@ $(function () {
 
         let customer_id = $("#customer_id").val();
         let order_status = $("#order_status").val();
+        let created_at = $("#created_at").val();
+        let updated_at = $("#updated_at").val();
 
         let data = {
             "customer_id": customer_id,
-            "status": order_status
+            "status": order_status,
+            "created_at": created_at,
+            "updated_at": updated_at
         };
 
         $("#flash_message").empty();
