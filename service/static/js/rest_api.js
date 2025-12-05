@@ -38,14 +38,13 @@ $(function () {
 
         let customer_id = $("#customer_id").val();
         let order_status = $("#order_status").val();
-        let created_at = $("#created_at").val();
-        let updated_at = $("#updated_at").val();
+        let now = new Date().toISOString();
 
         let data = {
             "customer_id": customer_id,
             "status": order_status,
-            "created_at": created_at,
-            "updated_at": updated_at
+            "created_at": now,
+            "updated_at": now
         };
 
         $("#flash_message").empty();
@@ -64,6 +63,45 @@ $(function () {
 
         ajax.fail(function(res){
             flash_message(res.responseJSON.message)
+        });
+    });
+
+    // ****************************************
+    // Update an Order
+    // ****************************************
+
+    $("#update-btn").click(function () {
+        let order_id = $("#order_id").val();
+        let customer_id = $("#customer_id").val();
+        let order_status = $("#order_status").val();
+        let created_at = $("#created_at").val();
+        
+        // Update the updated_at timestamp
+        let updated_at = new Date().toISOString();
+
+        let data = {
+            "customer_id": customer_id,
+            "status": order_status,
+            "created_at": created_at,
+            "updated_at": updated_at
+        };
+
+        $("#flash_message").empty();
+
+        let ajax = $.ajax({
+            type: "PUT",
+            url: `/orders/${order_id}`,
+            contentType: "application/json",
+            data: JSON.stringify(data)
+        });
+
+        ajax.done(function(res){
+            update_form_data(res);
+            flash_message("Success");
+        });
+
+        ajax.fail(function(res){
+            flash_message(res.responseJSON.message);
         });
     });
 
