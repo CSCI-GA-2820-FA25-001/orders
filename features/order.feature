@@ -21,7 +21,30 @@ Scenario: The server is running
 
 Scenario: Create an Order
     When I visit the "Home Page"
-    And I set the "Customer ID" to "1003"
-    And I set the "Order Status" to "0"
+    And I set the "customer_id" to "1999"
+    And I select "CREATED" in the "order_status" dropdown
     And I press the "Create" button
     Then I should see the message "Success"
+    When I copy the "order_id" field
+    And I press the "Clear" button
+    Then the "order_id" field should be empty
+    And the "customer_id" field should be empty
+    When I paste the "order_id" field
+    And I press the "Retrieve" button
+    Then I should see the message "Success"
+    And I should see "1999" in the "customer_id" field
+    And I should see "CREATED" in the "order_status" dropdown
+
+Scenario: Update an Order
+    When I visit the "Home Page"
+    And I set the "customer_id" to "1002"
+    And I press the "Retrieve" button
+    Then I should see the message "Success"
+    When I copy the "order_id" field
+    And I change "customer_id" to "1002-UPDATED"
+    And I press the "Update" button
+    Then I should see the message "Success"
+    When I press the "Clear" button
+    And I paste the "order_id" field
+    And I press the "Retrieve" button
+    Then I should see "1002-UPDATED" in the "customer_id" field

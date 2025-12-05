@@ -25,6 +25,7 @@ For information on Waiting until elements are present in the HTML see:
 import requests
 from compare3 import expect
 from behave import given  # pylint: disable=no-name-in-module
+from datetime import datetime
 
 # HTTP Return Codes
 HTTP_200_OK = 200
@@ -48,7 +49,10 @@ def step_impl(context):
         context.resp = requests.delete(
             f"{rest_endpoint}/{order['id']}", timeout=WAIT_TIMEOUT
         )
-        expect(context.resp.status_code).is_in(HTTP_204_NO_CONTENT, HTTP_200_OK)
+        assert context.resp.status_code in [
+            HTTP_204_NO_CONTENT,
+            HTTP_200_OK,
+        ], f"Delete failed with status code: {context.resp.status_code}"
 
     status_map = {
         "0": "CREATED",
@@ -60,10 +64,16 @@ def step_impl(context):
     }
 
     for row in context.table:
-        customer_id = row.get("customer_id")
+        customer_id = str(row.get("customer_id"))
         order_status_code = row.get("order_status", "").strip()
         status_name = status_map.get(order_status_code, "CREATED")
+        now = datetime.now().isoformat()
 
-        payload = {"customer_id": customer_id, "status": status_name}
+        payload = {
+            "customer_id": customer_id,
+            "status": status_name,
+            "created_at": now,
+            "updated_at": now,
+        }
         context.resp = requests.post(rest_endpoint, json=payload, timeout=WAIT_TIMEOUT)
         expect(context.resp.status_code).equal_to(HTTP_201_CREATED)
