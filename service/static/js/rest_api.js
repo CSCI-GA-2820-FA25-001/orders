@@ -106,6 +106,81 @@ $(function () {
     });
 
     // ****************************************
+    // Retrieve an Order
+    // ****************************************
+
+    $("#retrieve-btn").click(function () {
+    let order_id = $("#order_id").val();
+    let customer_id = $("#customer_id").val();
+
+    $("#flash_message").empty();
+
+    // 如果 order_id 为空，则通过 customer_id 搜索
+    if (!order_id && customer_id) {
+        let ajax = $.ajax({
+            type: "GET",
+            url: `/orders?customer_id=${customer_id}`,
+            contentType: "application/json"
+        });
+
+        ajax.done(function(res){
+            if (res && res.length > 0) {
+                update_form_data(res[0]);
+                flash_message("Success");
+            } else {
+                flash_message("No order found");
+            }
+        });
+
+        ajax.fail(function(res){
+            flash_message(res.responseJSON.message);
+        });
+    } else {
+        let ajax = $.ajax({
+            type: "GET",
+            url: `/orders/${order_id}`,
+            contentType: "application/json"
+        });
+
+        ajax.done(function(res){
+            update_form_data(res);
+            flash_message("Success");
+        });
+
+        ajax.fail(function(res){
+            flash_message(res.responseJSON.message);
+        });
+    }
+    });
+    
+
+    // ****************************************
+    // Delete an Order
+    // ****************************************
+
+    $("#delete-btn").click(function () {
+        let order_id = $("#order_id").val();
+
+        $("#flash_message").empty();
+
+        let ajax = $.ajax({
+            type: "DELETE",
+            url: `/orders/${order_id}`,
+            contentType: "application/json",
+            data: '',
+        });
+
+        ajax.done(function(res){
+            clear_form_data();
+            flash_message("Order has been Deleted!");
+        });
+
+        ajax.fail(function(res){
+            flash_message("Server error!");
+        });
+    });
+
+    // ****************************************
     // Clear Form
     // ****************************************
 

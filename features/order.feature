@@ -38,7 +38,7 @@ Scenario: Create an Order
 Scenario: Update an Order
     When I visit the "Home Page"
     And I set the "customer_id" to "1002"
-    And I press the "Search" button
+    And I press the "Retrieve" button
     Then I should see the message "Success"
     When I copy the "order_id" field
     And I change "customer_id" to "1002-UPDATED"
