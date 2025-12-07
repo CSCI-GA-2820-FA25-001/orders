@@ -154,6 +154,68 @@ $(function () {
     });
     
 
+
+    // ****************************************
+    // List the Orders
+    // ****************************************
+
+
+    // Render  Orders List table
+    function render_orders_table(orders) {
+        const $tbody = $("#orders_table_body");
+        $tbody.empty();
+
+        if (!orders || orders.length === 0) {
+            $tbody.append(`<tr><td colspan="6"><em>No orders found</em></td></tr>`);
+            return;
+        }
+
+        orders.forEach(order => {
+            const id = order.id ?? "";
+            const customer_id = order.customer_id ?? "";
+            const status = order.status ?? "";
+            const total = order.total_amount ?? "";      // adjust if your API uses a different name
+            const created = order.created_at ?? "";
+
+            $tbody.append(`
+            <tr data-order-id="${id}">
+                <td>${id}</td>
+                <td>${customer_id}</td>
+                <td>${status}</td>
+                <td>${total}</td>
+                <td>${created}</td>
+                <td>
+                <button type="button" class="btn btn-xs btn-primary row-retrieve">Load</button>
+                <button type="button" class="btn btn-xs btn-danger row-delete">Delete</button>
+                </td>
+            </tr>
+            `);
+        });
+    }
+
+    // Call API to list orders (optionally filtered by customer_id)
+    function list_orders(customer_id = "") {
+        const url = customer_id ? `/orders?customer_id=${encodeURIComponent(customer_id)}` : "/orders";
+
+        $.ajax({
+            type: "GET",
+            url: url,
+            contentType: "application/json",
+        })
+        .done(function (res) {
+            // handle either [] or {orders: []}
+            const orders = Array.isArray(res) ? res : (res.orders || []);
+            render_orders_table(orders);
+            flash_message(`Loaded ${orders.length} order(s)`);
+        })
+        .fail(function (res) {
+            flash_message(res.responseJSON?.message || "Could not load orders");
+        });
+    }
+
+
+
+
     // ****************************************
     // Delete an Order
     // ****************************************
