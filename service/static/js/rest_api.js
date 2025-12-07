@@ -9,7 +9,7 @@ $(function () {
         $("#order_id").val(res.id);
         $("#customer_id").val(res.customer_id);
         $("#order_status").val(res.status);
-        $("#order_total").val(res.total_amount);
+        $("#total_amount").val(res.total_amount);
         $("#created_at").val(res.created_at);
         $("#updated_at").val(res.updated_at);
     }
@@ -19,7 +19,7 @@ $(function () {
         $("#order_id").val("");
         $("#customer_id").val("");
         $("#order_status").val("CREATED");
-        $("#order_total").val("");
+        $("#total_amount").val("");
         $("#created_at").val("");
         $("#updated_at").val("");
     }
@@ -59,10 +59,12 @@ $(function () {
         ajax.done(function(res){
             update_form_data(res)
             flash_message("Success")
+            list_orders();
         });
 
         ajax.fail(function(res){
             flash_message(res.responseJSON.message)
+            
         });
     });
 
@@ -98,6 +100,7 @@ $(function () {
         ajax.done(function(res){
             update_form_data(res);
             flash_message("Success");
+            list_orders();
         });
 
         ajax.fail(function(res){
@@ -159,7 +162,6 @@ $(function () {
     // List the Orders
     // ****************************************
 
-
     // Render  Orders List table
     function render_orders_table(orders) {
         const $tbody = $("#orders_table_body");
@@ -185,8 +187,6 @@ $(function () {
                 <td>${total}</td>
                 <td>${created}</td>
                 <td>
-                <button type="button" class="btn btn-xs btn-primary row-retrieve">Load</button>
-                <button type="button" class="btn btn-xs btn-danger row-delete">Delete</button>
                 </td>
             </tr>
             `);
@@ -235,6 +235,7 @@ $(function () {
         ajax.done(function(res){
             clear_form_data();
             flash_message("Order has been Deleted!");
+            list_orders(); 
         });
 
         ajax.fail(function(res){
@@ -252,5 +253,5 @@ $(function () {
         clear_form_data()
     });
 
-
+list_orders(); 
 }  );
