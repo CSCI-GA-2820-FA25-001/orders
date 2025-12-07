@@ -29,7 +29,7 @@ Scenario: Create an Order
     And I press the "Clear" button
     Then the "order_id" field should be empty
     And the "customer_id" field should be empty
-    When I paste the "order_id" field
+    When I paste the "order_id_search" field
     And I press the "Retrieve" button
     Then I should see the message "Success"
     And I should see "1999" in the "customer_id" field
@@ -45,6 +45,31 @@ Scenario: Update an Order
     And I press the "Update" button
     Then I should see the message "Success"
     When I press the "Clear" button
-    And I paste the "order_id" field
+    When I paste the "order_id_search" field
     And I press the "Retrieve" button
     Then I should see "1002-UPDATED" in the "customer_id" field
+
+Scenario: Delete an Order
+    When I visit the "Home Page"
+    And I set the "customer_id" to "1002"
+    And I press the "Retrieve" button
+    Then I should see the message "Success"
+    When I copy the "order_id" field
+    When I press the "Clear" button
+    And I paste the "order_id_search" field
+    And I press the "Delete" button
+    Then I should see the message "Success"
+
+Scenario: Create an Order Item successfully
+    When I visit the "Home Page"
+    And I set the "customer_id" to "1999"
+    And I select "CREATED" in the "order_status" dropdown
+    And I press the "Create" button
+    Then I should see the message "Success"
+    When I copy the "order_id" field
+
+    When I set the "item_product_id" to "SKU123"
+    And I set the "item_quantity" to "2"
+    And I set the "item_unit_price" to "19.99"
+    And I press the "Create Item" button
+    Then I should see the message "Item created"
