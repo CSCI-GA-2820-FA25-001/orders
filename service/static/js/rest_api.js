@@ -9,7 +9,7 @@ $(function () {
         $("#order_id").val(res.id);
         $("#customer_id").val(res.customer_id);
         $("#order_status").val(res.status);
-        $("#order_total").val(res.total_amount);
+        $("#total_amount").val(res.total_amount);
         $("#created_at").val(res.created_at);
         $("#updated_at").val(res.updated_at);
     }
@@ -71,7 +71,7 @@ $(function () {
     // ****************************************
 
     $("#update-btn").click(function () {
-        let order_id = $("#order_id").val();
+        let order_id = $("#order_id").val(); //this remains #order_id becasue this is the currently loaded order
         let customer_id = $("#customer_id").val();
         let order_status = $("#order_status").val();
         let created_at = $("#created_at").val();
@@ -110,7 +110,7 @@ $(function () {
     // ****************************************
 
     $("#retrieve-btn").click(function () {
-    let order_id = $("#order_id").val();
+    let order_id = $("#order_id_search").val().trim();
     let customer_id = $("#customer_id").val();
 
     $("#flash_message").empty();
@@ -159,8 +159,7 @@ $(function () {
     // ****************************************
 
     $("#delete-btn").click(function () {
-        let order_id = $("#order_id").val();
-
+        let order_id = $("#order_id_search").val().trim();
         $("#flash_message").empty();
 
         let ajax = $.ajax({
