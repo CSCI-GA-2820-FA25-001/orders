@@ -171,7 +171,7 @@ $(function () {
 
         ajax.done(function(res){
             clear_form_data();
-            flash_message("Order has been Deleted!");
+            flash_message("Success");
         });
 
         ajax.fail(function(res){
