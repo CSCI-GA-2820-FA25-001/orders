@@ -73,3 +73,21 @@ Scenario: Create an Order Item successfully
     And I set the "item_unit_price" to "19.99"
     And I press the "Create Item" button
     Then I should see the message "Item created"
+
+
+
+
+Scenario: List ALL Orders
+    When I visit the "Home Page"
+    And I press the "List All Orders" button
+    Then I should see the message "Listed all orders"
+    And I should see "1001" in the results
+    And I should see "1002" in the results
+
+Scenario: List all orders for a customer
+    When I visit the "Home Page"
+    And I set the "customer_id" to "1001"
+    And I press the "List by Customer" button
+    Then I should see the message "Listed customer's orders"
+    And I should see "1001" in the results
+    And I should not see "1002" in the results
