@@ -59,6 +59,7 @@ $(function () {
         ajax.done(function(res){
             update_form_data(res)
             flash_message("Success")
+            list_orders();
         });
 
         ajax.fail(function(res){
@@ -197,6 +198,66 @@ $(function () {
     // LIST ALL ORDERS
     // ****************************************
 
+// ****************************************
+// LIST ORDERS 
+// ****************************************
+
+
+    function render_orders_table(orders) {
+  const $tbody = $("#orders_table_body");
+  $tbody.empty();
+
+  if (!orders || orders.length === 0) {
+    $tbody.append(`<tr><td colspan="6"><em>No orders found</em></td></tr>`);
+    return;
+  }
+
+  orders.forEach(order => {
+    const id = order.id ?? "";
+    const customer_id = order.customer_id ?? "";
+    const status = order.status ?? "";
+    const total = order.total_amount ?? "";
+    const created = order.created_at ?? "";
+
+    $tbody.append(`
+      <tr>
+        <td>${id}</td>
+        <td>${customer_id}</td>
+        <td>${status}</td>
+        <td>${total}</td>
+        <td>${created}</td>
+        <td></td>
+      </tr>
+    `);
+  });
+}
+
+function list_orders(customer_id = "") {
+  const url = customer_id
+    ? `/orders?customer_id=${encodeURIComponent(customer_id)}`
+    : "/orders";
+
+  $.ajax({ type: "GET", url, contentType: "application/json" })
+    .done(function (res) {
+      const orders = Array.isArray(res) ? res : (res.orders || []);
+      render_orders_table(orders);
+      flash_message(`Loaded ${orders.length} order(s)`);
+    })
+    .fail(function (res) {
+      flash_message(res.responseJSON?.message || "Could not load orders");
+    });
+}
+
+$("#list_all_orders-btn").click(function () {
+  list_orders("");
+});
+
+$("#list_by_customer-btn").click(function () {
+  list_orders($("#customer_id").val().trim());
+});
+
+
+
 
     // Render Orders List table
     function render_orders_table(orders) {
@@ -261,8 +322,6 @@ $(function () {
         const customer_id = $("#customer_id").val().trim(); 
         list_orders(customer_id); 
     });
-
-
 
    
 list_orders(''); 
