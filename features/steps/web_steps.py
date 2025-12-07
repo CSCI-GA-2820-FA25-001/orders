@@ -98,6 +98,14 @@ def step_impl(context: Any, element_name: str) -> None:
     assert element.get_attribute("value") == ""
 
 
+@then('I should see "{text}" in the "{table_id}" table')
+def step_impl(context, text, table_id):
+    table = context.driver.find_element(By.ID, table_id)
+    assert (
+        text in table.text
+    ), f'Did not find "{text}" in table #{table_id}. Table text was:\n{table.text}'
+
+
 ##################################################################
 # These two function simulate copy and paste
 ##################################################################

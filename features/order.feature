@@ -48,3 +48,22 @@ Scenario: Update an Order
     And I paste the "order_id" field
     And I press the "Retrieve" button
     Then I should see "1002-UPDATED" in the "customer_id" field
+
+
+
+Scenario: Create an Order Item
+    When I visit the "Home Page"
+    And I set the "customer_id" to "1999"
+    And I select "CREATED" in the "order_status" dropdown
+    And I press the "Create" button
+    Then I should see the message "Success"
+
+    
+    When I set the "item_product_id" to "123"
+    And I set the "item_quantity" to "2"
+    And I set the "item_unit_price" to "20.50"
+    And I press the "Create Item" button
+    Then I should see the message "Item created"
+
+    
+    And I should see "123" in the "items_table" table

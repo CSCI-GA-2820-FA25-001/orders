@@ -115,6 +115,112 @@
         </div> <!-- end well -->
       </div> <!-- end Form -->
 
+
+
+
+
+<!-- =========================
+     ORDER ITEMS Section
+     ========================= -->
+<div class="col-md-12" id="order_items_section">
+  <h3>Manage Order Items</h3>
+  <div class="well">
+    <p class="text-muted">
+      These actions apply to the Order ID shown above. (Create/Retrieve an order first.)
+    </p>
+
+    <div class="form-horizontal">
+      <!-- Item ID (read-only / optional) -->
+      <div class="form-group">
+        <label class="control-label col-sm-2" for="item_id">Item ID:</label>
+        <div class="col-sm-10">
+          <input
+            type="text"
+            class="form-control"
+            id="item_id"
+            placeholder="Auto-generated (blank when creating)"
+            readonly
+          />
+        </div>
+      </div>
+
+      <!-- Product ID -->
+      <div class="form-group">
+        <label class="control-label col-sm-2" for="item_product_id">Product ID:</label>
+        <div class="col-sm-10">
+          <input
+            type="text"
+            class="form-control"
+            id="item_product_id"
+            placeholder="Enter product ID (e.g., SKU123)"
+          />
+        </div>
+      </div>
+
+      <!-- Quantity -->
+      <div class="form-group">
+        <label class="control-label col-sm-2" for="item_quantity">Quantity:</label>
+        <div class="col-sm-10">
+          <input
+            type="number"
+            class="form-control"
+            id="item_quantity"
+            min="1"
+            step="1"
+            placeholder="Enter quantity"
+          />
+        </div>
+      </div>
+
+      <!-- Unit Price -->
+      <div class="form-group">
+        <label class="control-label col-sm-2" for="item_unit_price">Unit Price:</label>
+        <div class="col-sm-10">
+          <input
+            type="number"
+            class="form-control"
+            id="item_unit_price"
+            min="0"
+            step="0.01"
+            placeholder="Enter unit price (e.g., 19.99)"
+          />
+        </div>
+      </div>
+
+      <!-- Item action buttons (IMPORTANT: ids match Behave mapping) -->
+      <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-10">
+          <button type="button" class="btn btn-success" id="create_item-btn">Create Item</button>
+          <button type="button" class="btn btn-warning" id="update_item-btn">Update Item</button>
+          <button type="button" class="btn btn-danger" id="delete_item-btn">Delete Item</button>
+          <button type="button" class="btn btn-info" id="clear_item-btn">Clear Item Form</button>
+        </div>
+      </div>
+    </div>
+
+    <hr />
+
+    <!-- Items table -->
+    <div class="table-responsive">
+      <table class="table table-striped" id="items_table">
+        <thead>
+          <tr>
+            <th class="col-md-2">Item ID</th>
+            <th class="col-md-4">Product ID</th>
+            <th class="col-md-2">Qty</th>
+            <th class="col-md-2">Unit Price</th>
+            <th class="col-md-2">Line Total</th>
+          </tr>
+        </thead>
+        <tbody id="items_table_body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+
+
+      
       <!-- Search Results -->
       <div class="table-responsive col-md-12" id="orders_results">
         <h3>Orders List</h3>
@@ -140,6 +246,12 @@
         <br><br>
         <p>&copy; NYU DevOps Company 2022</p>
       </footer>
+
+
+
+
+
+
 
       
     </div> <!-- end container -->

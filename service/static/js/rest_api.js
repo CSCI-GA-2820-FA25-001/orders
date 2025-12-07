@@ -191,4 +191,86 @@ $(function () {
     });
 
 
+
+// ****************************************
+// ORDER ITEMS
+// ****************************************
+
+
+function render_items(items) {
+  $("#items_table_body").empty();
+
+  items.forEach(function (it) {
+    const id = it.id ?? it.item_id ?? "";
+    const product_id = it.product_id ?? "";
+    const qty = it.quantity ?? "";
+    const price = it.price ?? it.unit_price ?? "";
+    const line = it.line_amount ?? it.line_total ?? "";
+
+    $("#items_table_body").append(`
+      <tr>
+        <td>${id}</td>
+        <td>${product_id}</td>
+        <td>${qty}</td>
+        <td>${price}</td>
+        <td>${line}</td>
+      </tr>
+    `);
+  });
+}
+
+function list_items_for_current_order() {
+  const order_id = $("#order_id").val();
+  if (!order_id) return;
+
+  $.ajax({
+    type: "GET",
+    url: `/orders/${order_id}/orderitems`,   // <-- change to /items if that's your API
+    contentType: "application/json",
+  })
+  .done(function (res) {
+    render_items(res);
+  })
+  .fail(function () {
+    // optional: flash_message("Failed to list items");
+  });
+}
+
+
+// ****************************************
+// CREATE AN ORDER ITEM
+// ****************************************
+
+
+    $("#create_item-btn").click(function () {
+    const order_id = parseInt($("#order_id").val(), 10);   // current order (readonly)
+    const product_id = $("#item_product_id").val().trim();
+    const price = parseFloat($("#item_unit_price").val());
+    const quantity = parseInt($("#item_quantity").val(), 10);
+
+    //make sure there are order id for which to add to 
+    if (!order_id) return flash_message("Create or Retrieve an order first (Order ID is required).");
+    if (!product_id) return flash_message("Product ID is required.");
+    if (!Number.isFinite(price) || price < 0) return flash_message("Unit Price must be a valid number >= 0.");
+    if (!Number.isInteger(quantity) || quantity <= 0) return flash_message("Quantity must be a positive integer.");
+
+    
+    const data = { order_id, product_id, price, quantity };
+
+    //send post to orderitems with the desirialize
+    $.ajax({
+        type: "POST",
+        url: `/orders/${order_id}/orderitems`,
+        contentType: "application/json",
+        data: JSON.stringify(data)
+    })
+    .done(function () {
+    flash_message("Item created");
+    list_items_for_current_order();
+    })
+    .fail(function (res) {
+        flash_message(res.responseJSON?.message || "Failed to create item");
+    });
+});
+
 }  );
