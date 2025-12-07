@@ -48,3 +48,18 @@ Scenario: Update an Order
     And I paste the "order_id" field
     And I press the "Retrieve" button
     Then I should see "1002-UPDATED" in the "customer_id" field
+
+
+Scenario: Delete an Order
+    When I visit the "Home Page"
+    And I set the "customer_id" to "1002"
+    And I press the "Retrieve" button
+    Then I should see the message "Success"
+    When I copy the "order_id" field
+    And I press the "Delete" button
+    Then I should see the message "Order has been Deleted!"
+    When I press the "Clear" button
+    And I paste the "order_id" field
+    And I press the "Retrieve" button
+    Then I should not see the message "Success"
+

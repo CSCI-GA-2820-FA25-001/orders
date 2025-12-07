@@ -98,6 +98,7 @@ $(function () {
         ajax.done(function(res){
             update_form_data(res);
             flash_message("Success");
+            list_orders(); 
         });
 
         ajax.fail(function(res){
@@ -172,7 +173,8 @@ $(function () {
 
         ajax.done(function(res){
             clear_form_data();
-            flash_message("Order has been Deleted!");
+            flash_message("Success");
+            list_orders(); 
         });
 
         ajax.fail(function(res){
@@ -188,7 +190,80 @@ $(function () {
         $("#order_id").val("");
         $("#flash_message").empty();
         clear_form_data()
+        list_orders(); 
+    });
+
+    // ****************************************
+    // LIST ALL ORDERS
+    // ****************************************
+
+
+    // Render Orders List table
+    function render_orders_table(orders) {
+    const $tbody = $("#orders_table_body");
+    $tbody.empty();
+
+    if (!orders || orders.length === 0) {
+        $tbody.append(`<tr><td colspan="5"><em>No orders found</em></td></tr>`);
+        return;
+    }
+
+    orders.forEach(order => {
+        const id = order.id ?? "";
+        const customer_id = order.customer_id ?? "";
+        const status = order.status ?? "";
+        const total = order.total_amount ?? "";
+        const created = order.created_at ?? "";
+
+        $tbody.append(`
+        <tr data-order-id="${id}">
+            <td>${id}</td>
+            <td>${customer_id}</td>
+            <td>${status}</td>
+            <td>${total}</td>
+            <td>${created}</td>
+        </tr>
+        `);
+    });
+    }
+
+    // Call API to list orders (optionally filtered by customer_id)
+    function list_orders(customer_id = "") {
+    const url = customer_id
+        ? `/orders?customer_id=${encodeURIComponent(customer_id)}`
+        : "/orders";
+
+    $.ajax({
+        type: "GET",
+        url: url,
+        contentType: "application/json",
+    })
+        .done(function (res) {
+        const orders = Array.isArray(res) ? res : (res.orders || []);
+        render_orders_table(orders);
+        flash_message(`Loaded ${orders.length} order(s)`);
+        })
+        .fail(function (res) {
+        flash_message(res.responseJSON?.message || "Could not load orders");
+        });
+    }
+   $("#list-btn").click(function () { 
+        
+        list_orders(''); 
+    });
+
+    // ****************************************
+    // LIST CUSTOMER ORDERS
+    // ****************************************
+
+    $("#list-by-customer-btn").click(function () { 
+        //List orders filtered by customer_id (uses your existing query logic)
+        const customer_id = $("#customer_id").val().trim(); 
+        list_orders(customer_id); 
     });
 
 
+
+   
+list_orders(''); 
 }  );
