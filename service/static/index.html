@@ -109,15 +109,13 @@
                 <button type="button" class="btn btn-success" id="create-btn">Create Order</button>
                 <button type="button" class="btn btn-warning" id="update-btn">Update Order</button>
                 <button type="button" class="btn btn-info" id="clear-btn">Clear Form</button>
+                <button type="button" class="btn btn-primary" id="list_all_orders-btn">List All Orders</button>
+                <button type="button" class="btn btn-default" id="list_by_customer-btn">List by Customer</button>
               </div>
             </div>
           </div> <!-- form horizontal -->
         </div> <!-- end well -->
       </div> <!-- end Form -->
-
-
-
-
 
 <!-- =========================
      ORDER ITEMS Section
@@ -130,7 +128,21 @@
     </p>
 
     <div class="form-horizontal">
-      <!-- Item ID (read-only / optional) -->
+      <!-- Item ID Search -->
+
+      <div class="form-group">
+        <label class="control-label col-sm-2" for="item_id_search">Search for Item ID:</label>
+        <div class="col-sm-4">
+          <input type="text" class="form-control" id="item_id_search" placeholder="Enter item ID">
+        </div>
+
+        <div class="col-sm-4">
+          <button type="button" class="btn btn-primary" id="retrieve_item-btn">Retrieve Item</button>
+          <button type="button" class="btn btn-danger" id="delete_item-btn">Delete Item</button>
+        </div>
+      </div>
+
+      <!-- Loaded Item ID (readonly) -->
       <div class="form-group">
         <label class="control-label col-sm-2" for="item_id">Item ID:</label>
         <div class="col-sm-10">
@@ -194,6 +206,8 @@
           <button type="button" class="btn btn-warning" id="update_item-btn">Update Item</button>
           <button type="button" class="btn btn-danger" id="delete_item-btn">Delete Item</button>
           <button type="button" class="btn btn-info" id="clear_item-btn">Clear Item Form</button>
+          <button type="button" class="btn btn-primary" id="list_all_order_items-btn">List All Orders</button>
+          
         </div>
       </div>
     </div>
@@ -217,8 +231,6 @@
     </div>
   </div>
 </div>
-
-
 
       
       <!-- Search Results -->

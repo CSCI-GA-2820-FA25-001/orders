@@ -19,7 +19,7 @@ $(function () {
         $("#order_id").val("");
         $("#customer_id").val("");
         $("#order_status").val("CREATED");
-        $("#order_total").val("");
+        $("#total_amount").val("");
         $("#created_at").val("");
         $("#updated_at").val("");
     }
@@ -98,6 +98,8 @@ $(function () {
         ajax.done(function(res){
             update_form_data(res);
             flash_message("Success");
+            list_orders();
+
         });
 
         ajax.fail(function(res){
@@ -172,6 +174,8 @@ $(function () {
         ajax.done(function(res){
             clear_form_data();
             flash_message("Success");
+            list_orders();
+
         });
 
         ajax.fail(function(res){
@@ -192,9 +196,106 @@ $(function () {
 
 
 // ****************************************
+// List ORDERS
+// ****************************************
+
+  function render_orders_table(orders) {
+    const $tbody = $("#orders_table_body");
+    $tbody.empty();
+
+    if (!orders || orders.length === 0) {
+      $tbody.append(`<tr><td colspan="6"><em>No orders found</em></td></tr>`);
+      return;
+  }
+
+  orders.forEach(order => {
+    const id = order.id ?? "";
+    const customer_id = order.customer_id ?? "";
+    const status = order.status ?? "";
+    const total = order.total_amount ?? "";
+    const created = order.created_at ?? "";
+
+    $tbody.append(`
+      <tr>
+        <td>${id}</td>
+        <td>${customer_id}</td>
+        <td>${status}</td>
+        <td>${total}</td>
+        <td>${created}</td>
+        <td></td>
+      </tr>
+    `);
+  });
+}
+
+function list_orders(customer_id = "") {
+  const url = customer_id
+    ? `/orders?customer_id=${encodeURIComponent(customer_id)}`
+    : "/orders";
+
+  $.ajax({ type: "GET", url, contentType: "application/json" })
+    .done(function (res) {
+      const orders = Array.isArray(res) ? res : (res.orders || []);
+      render_orders_table(orders);
+    })
+    .fail(function (res) {
+      flash_message(res.responseJSON?.message || "Could not load orders");
+    });
+}
+
+$("#list_all_orders-btn").click(function () {
+  list_orders("");
+  flash_message(`Listed all orders`);
+
+
+});
+
+$("#list_by_customer-btn").click(function () {
+  list_orders($("#customer_id").val().trim());
+  flash_message(`Listed customer's orders`);
+});
+
+
+
+// ****************************************
 // ORDER ITEMS
 // ****************************************
 
+
+//RETRIEVE
+
+function update_item_form(res) {
+  const item_id = res.id ?? res.item_id ?? "";
+  $("#item_id").val(item_id);
+  $("#item_id_search").val(item_id); // optional sync
+  $("#item_product_id").val(res.product_id ?? "");
+  $("#item_quantity").val(res.quantity ?? "");
+  $("#item_unit_price").val(res.price ?? res.unit_price ?? "");
+}
+$("#retrieve_item-btn").click(function () {
+  const order_id = $("#order_id").val().trim();
+  const item_id = $("#item_id_search").val().trim();
+
+  if (!order_id) return flash_message("Retrieve an order first (Order ID is required).");
+  if (!item_id) return flash_message("Item ID is required.");
+
+  $.ajax({
+    type: "GET",
+    url: `/orders/${encodeURIComponent(order_id)}/orderitems/${encodeURIComponent(item_id)}`,
+    contentType: "application/json",
+  })
+  .done(function (res) {
+    update_item_form(res);
+    flash_message("Success");
+  })
+  .fail(function (res) {
+    flash_message(res.responseJSON?.message || "Item not found");
+  });
+});
+
+
+
+///LIST
 
 function render_items(items) {
   $("#items_table_body").empty();
@@ -235,6 +336,11 @@ function list_items_for_current_order() {
   });
 }
 
+$("#list_all_order_items-btn").click(function () {
+  list_items_for_current_order("");
+  flash_message(`Listed all order's items`);
+});
+
 
 // ****************************************
 // CREATE AN ORDER ITEM
@@ -271,5 +377,23 @@ function list_items_for_current_order() {
         flash_message(res.responseJSON?.message || "Failed to create item");
     });
 });
+
+function clear_item_form_data() {
+  $("#item_id_search").val("");
+  $("#item_id").val("");
+  $("#item_product_id").val("");
+  $("#item_quantity").val("");
+  $("#item_unit_price").val("");
+}
+
+// Clear Item Form button
+$("#clear_item-btn").click(function () {
+  clear_item_form_data();
+  flash_message("Item form cleared");
+});
+
+
+
+list_orders();
 
 }  );
