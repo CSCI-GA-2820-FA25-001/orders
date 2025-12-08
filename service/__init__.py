@@ -49,7 +49,10 @@ def create_app():
         # Dependencies require we import the routes AFTER the Flask app is created
         # pylint: disable=wrong-import-position, wrong-import-order, unused-import
         from service import routes, models  # noqa: F401 E402
-        from service.common import error_handlers, cli_commands  # noqa: F401, E402
+        from service.common import cli_commands  # noqa: F401, E402
+        from service.common.error_handlers import init_app as init_error_handlers
+
+        init_error_handlers(app)
 
         try:
             db.create_all()
