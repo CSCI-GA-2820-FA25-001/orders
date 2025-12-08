@@ -31,7 +31,7 @@ DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
 )
 
-BASE_URL = "/orders"
+BASE_URL = "/api/orders"
 
 
 ######################################################################
@@ -486,7 +486,7 @@ class TestOrderService(TestCase):
         db.session.commit()  # ensure it is persisted to the db
         db.session.expire_all()  # FORCE TO RELOAD FOR ROUTE
 
-        resp = self.client.put(f"/orders/{order.id}/cancel")
+        resp = self.client.put(f"/api/orders/{order.id}/cancel")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = resp.get_json()
         self.assertEqual(data["status"], "CANCELED")
@@ -501,10 +501,113 @@ class TestOrderService(TestCase):
         db.session.commit()  # persist change
         db.session.expire_all()  # <--- force reload for route
 
-        resp = self.client.put(f"/orders/{order.id}/cancel")
+        resp = self.client.put(f"/api/orders/{order.id}/cancel")
         self.assertEqual(resp.status_code, status.HTTP_409_CONFLICT)
 
     def test_cancel_order_not_found(self):
         """It should return 404 for non-existent order"""
-        resp = self.client.put("/orders/999/cancel")
+        resp = self.client.put("/api/orders/999/cancel")
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_update_orderitem_not_found(self):
+        """Test updating a non-existent orderitem (covers line 80 in orderitems.py)"""
+        order = self._create_orders(1)[0]
+        resp = self.client.put(
+            f"{BASE_URL}/{order.id}/orderitems/999999",
+            json={
+                "product_id": "test",
+                "price": "10.00",
+                "quantity": 2
+            },
+            content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_get_orderitem_wrong_order(self):
+        """Test getting orderitem that doesn't belong to the order (covers line 46 in orderitems.py)"""
+        orders = self._create_orders(2)
+
+        orderitem = OrderItemFactory()
+        resp = self.client.post(
+            f"{BASE_URL}/{orders[0].id}/orderitems",
+            json=orderitem.serialize(),
+            content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        data = resp.get_json()
+        orderitem_id = data["id"]
+
+        resp = self.client.get(
+            f"{BASE_URL}/{orders[1].id}/orderitems/{orderitem_id}",
+            content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_delete_orderitem_not_found(self):
+        """Test deleting a non-existent orderitem (covers line 94 in orderitems.py)"""
+        order = self._create_orders(1)[0]
+        resp = self.client.delete(
+            f"{BASE_URL}/{order.id}/orderitems/999999",
+            content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_create_order_missing_required_field(self):
+        """Test creating order with missing required field"""
+        response = self.client.post(
+            BASE_URL,
+            json={"customer_id": "123"},
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_create_order_with_invalid_status(self):
+        """Test creating order with invalid status"""
+        response = self.client.post(
+            BASE_URL,
+            json={
+                "customer_id": "123",
+                "status": "INVALID_STATUS"
+            },
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_health_check(self):
+        """Test health check endpoint"""
+        resp = self.client.get('/health')
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(data['status'], 200)
+        self.assertEqual(data['message'], 'Healthy')
+
+    def test_trigger_internal_server_error_handler(self):
+        """Trigger the global 500 handler by temporarily swapping an existing view."""
+        endpoint = "index"
+        rule = "/"
+
+        # save original view so we can restore it
+        original_view = app.view_functions.get(endpoint)
+        original_testing = app.config.get("TESTING", False)
+        original_debug = app.debug
+
+        def _raise_for_500():
+            raise RuntimeError("simulated server error for coverage test")
+
+        app.view_functions[endpoint] = _raise_for_500
+        app.config["TESTING"] = False
+        app.debug = False
+
+        try:
+            resp = self.client.get(rule)
+            self.assertEqual(resp.status_code, 500)
+            j = resp.get_json(silent=True)
+            if j is not None:
+                self.assertTrue(any(k in j for k in ("message", "error", "status")))
+        finally:
+            if original_view is not None:
+                app.view_functions[endpoint] = original_view
+            else:
+                app.view_functions.pop(endpoint, None)
+            app.config["TESTING"] = original_testing
+            app.debug = original_debug

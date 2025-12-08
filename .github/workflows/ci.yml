@@ -45,7 +45,9 @@ jobs:
         run: python -m pip install --upgrade pip pipenv
 
       - name: Install Python package dependencies
-        run: pipenv install --system --dev
+        run: |
+          pipenv install --system --dev
+          python -m pip install flask-restx
 
       - name: Linting
         run: |
