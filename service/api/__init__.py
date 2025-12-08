@@ -3,6 +3,7 @@ Flask-RESTX API initialization
 """
 from flask_restx import Api
 from flask import Blueprint
+from . import orders, orderitems
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
@@ -16,7 +17,6 @@ api = Api(
     default_label='Orders operations'
 )
 
-from . import orders, orderitems
 
 api.add_namespace(orders.ns)
 api.add_namespace(orderitems.ns)

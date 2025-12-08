@@ -1,12 +1,12 @@
 """
 Orders Namespace
 """
+from datetime import datetime, timedelta
 from flask_restx import Namespace, Resource, fields, reqparse
 from flask import request
 from service.models import Order
 from service.common import status
 from service.common.order_status import Status
-from datetime import datetime, timedelta
 
 ns = Namespace('orders', description='Order operations')
 

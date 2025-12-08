@@ -102,7 +102,16 @@ class OrderItemResource(Resource):
     @ns.response(404, 'OrderItem not found')
     def delete(self, order_id, orderitem_id):
         """Delete an order item"""
+        order = Order.find(order_id)
+        if not order:
+            ns.abort(status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' could not be found.")
+
         orderitem = OrderItem.find(orderitem_id)
-        if orderitem:
-            orderitem.delete()
+        if not orderitem:
+            ns.abort(status.HTTP_404_NOT_FOUND, f"OrderItem with id '{orderitem_id}' could not be found.")
+
+        if orderitem.order_id != order_id:
+            ns.abort(status.HTTP_404_NOT_FOUND, f"OrderItem '{orderitem_id}' does not belong to Order '{order_id}'.")
+
+        orderitem.delete()
         return '', status.HTTP_204_NO_CONTENT
