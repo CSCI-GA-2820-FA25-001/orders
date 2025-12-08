@@ -42,7 +42,7 @@ def create_app():
     from service.models import db
     from service.api import api_bp
 
-    db.init_app(app)   
+    db.init_app(app)
     app.register_blueprint(api_bp)
 
     with app.app_context():

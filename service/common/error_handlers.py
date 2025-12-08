@@ -19,9 +19,10 @@ Module: error_handlers
 from flask import jsonify
 from service.models import DataValidationError
 
+
 def init_app(app):
     """Initialize error handlers with the Flask app"""
-    
+
     @app.errorhandler(DataValidationError)
     def handle_validation_error(error):
         """Convert DataValidationError to 400 Bad Request"""

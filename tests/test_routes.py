@@ -509,7 +509,6 @@ class TestOrderService(TestCase):
         resp = self.client.put("/api/orders/999/cancel")
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
-
     def test_update_orderitem_not_found(self):
         """Test updating a non-existent orderitem (covers line 80 in orderitems.py)"""
         order = self._create_orders(1)[0]
@@ -527,7 +526,7 @@ class TestOrderService(TestCase):
     def test_get_orderitem_wrong_order(self):
         """Test getting orderitem that doesn't belong to the order (covers line 46 in orderitems.py)"""
         orders = self._create_orders(2)
-        
+
         orderitem = OrderItemFactory()
         resp = self.client.post(
             f"{BASE_URL}/{orders[0].id}/orderitems",
@@ -537,7 +536,7 @@ class TestOrderService(TestCase):
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
         data = resp.get_json()
         orderitem_id = data["id"]
-        
+
         resp = self.client.get(
             f"{BASE_URL}/{orders[1].id}/orderitems/{orderitem_id}",
             content_type="application/json"
@@ -551,13 +550,13 @@ class TestOrderService(TestCase):
             f"{BASE_URL}/{order.id}/orderitems/999999",
             content_type="application/json"
         )
-        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT) 
-        
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+
     def test_create_order_missing_required_field(self):
         """Test creating order with missing required field"""
         response = self.client.post(
             BASE_URL,
-            json={"customer_id": "123"},  
+            json={"customer_id": "123"},
             content_type='application/json'
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -568,20 +567,19 @@ class TestOrderService(TestCase):
             BASE_URL,
             json={
                 "customer_id": "123",
-                "status": "INVALID_STATUS"  
+                "status": "INVALID_STATUS"
             },
             content_type='application/json'
         )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)      
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-   
     def test_health_check(self):
         """Test health check endpoint"""
         resp = self.client.get('/health')
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = resp.get_json()
         self.assertEqual(data['status'], 200)
-        self.assertEqual(data['message'], 'Healthy')  
+        self.assertEqual(data['message'], 'Healthy')
 
     def test_trigger_internal_server_error_handler(self):
         """Trigger the global 500 handler by temporarily swapping an existing view."""
