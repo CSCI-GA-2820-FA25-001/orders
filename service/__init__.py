@@ -40,8 +40,10 @@ def create_app():
     # Initialize Plugins
     # pylint: disable=import-outside-toplevel
     from service.models import db
+    from service.api import api_bp
 
-    db.init_app(app)
+    db.init_app(app)   
+    app.register_blueprint(api_bp)
 
     with app.app_context():
         # Dependencies require we import the routes AFTER the Flask app is created
