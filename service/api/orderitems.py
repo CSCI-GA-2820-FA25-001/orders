@@ -107,8 +107,9 @@ class OrderItemResource(Resource):
             ns.abort(status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' could not be found.")
 
         orderitem = OrderItem.find(orderitem_id)
+
         if not orderitem:
-            ns.abort(status.HTTP_404_NOT_FOUND, f"OrderItem with id '{orderitem_id}' could not be found.")
+            return '', status.HTTP_204_NO_CONTENT
 
         if orderitem.order_id != order_id:
             ns.abort(status.HTTP_404_NOT_FOUND, f"OrderItem '{orderitem_id}' does not belong to Order '{order_id}'.")
