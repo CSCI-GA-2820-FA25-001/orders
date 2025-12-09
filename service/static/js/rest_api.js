@@ -67,7 +67,7 @@ $(function () {
 
     let ajax = $.ajax({
       type: "POST",
-      url: "/orders",
+      url: "/api/orders",
       contentType: "application/json",
       data: JSON.stringify(data),
     });
@@ -187,7 +187,7 @@ $(function () {
 
     let ajax = $.ajax({
       type: "DELETE",
-      url: `/orders/${order_id}`,
+      url: `/api/orders/${order_id}`,
       contentType: "application/json",
       data: ''
     });
@@ -329,7 +329,7 @@ function list_items_for_current_order() {
 
   $.ajax({
     type: "GET",
-    url: `/orders/${encodeURIComponent(order_id)}/orderitems`,
+    url: `/api/orders/${encodeURIComponent(order_id)}/orderitems`,
     contentType: "application/json",
   })
     .done((res) => render_items(Array.isArray(res) ? res : (res.items || [])))
@@ -353,7 +353,7 @@ $("#retrieve_item-btn").on("click", function (e) {
 
   $.ajax({
     type: "GET",
-    url: `/orders/${encodeURIComponent(order_id)}/orderitems/${encodeURIComponent(item_id)}`,
+    url: `/api/orders/${encodeURIComponent(order_id)}/orderitems/${encodeURIComponent(item_id)}`,
     contentType: "application/json",
   })
     .done((res) => {
@@ -381,7 +381,7 @@ $("#create_item-btn").on("click", function (e) {
 
   $.ajax({
     type: "POST",
-    url: `/orders/${encodeURIComponent(order_id)}/orderitems`,
+    url: `/api/orders/${encodeURIComponent(order_id)}/orderitems`,
     contentType: "application/json",
     data: JSON.stringify({ product_id, quantity, price }),
   })
@@ -415,7 +415,7 @@ $("#update_item-btn").on("click", function (e) {
 
   $.ajax({
     type: "PUT",
-    url: `/orders/${encodeURIComponent(order_id)}/orderitems/${encodeURIComponent(item_id)}`,
+    url: `/api/orders/${encodeURIComponent(order_id)}/orderitems/${encodeURIComponent(item_id)}`,
     contentType: "application/json",
     data: JSON.stringify({ product_id, quantity, price }),
   })
@@ -441,7 +441,7 @@ $("#delete_item-btn").on("click", function (e) {
 
   $.ajax({
     type: "DELETE",
-    url: `/orders/${encodeURIComponent(order_id)}/orderitems/${encodeURIComponent(item_id)}`,
+    url: `/api/orders/${encodeURIComponent(order_id)}/orderitems/${encodeURIComponent(item_id)}`,
     contentType: "application/json",
   })
     .done(() => {

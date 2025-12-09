@@ -66,15 +66,14 @@ Scenario: Create an Order Item successfully
     And I select "CREATED" in the "order_status" dropdown
     And I press the "Create" button
     Then I should see the message "Success"
+    
     When I copy the "order_id" field
+    And I press the "Toggle Order Items" button
     When I set the "item_product_id" to "SKU123"
     And I set the "item_quantity" to "2"
     And I set the "item_unit_price" to "19.99"
     And I press the "Create Item" button
     Then I should see the message "Item created"
-
-
-
 
 
 Scenario: List ALL Orders
@@ -156,3 +155,4 @@ Scenario: Delete an Order Item
     And I press the "Delete Item" button
     Then I should see the message "Success"
     
+
