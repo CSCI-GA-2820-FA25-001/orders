@@ -275,138 +275,40 @@ $(function () {
     // ORDER ITEMS
     // ****************************************
 
-    //RETRIEVE
+function update_item_form(res) {
+  const item_id = res.id ?? res.item_id ?? "";
+  $("#item_id").val(item_id);
+  $("#item_id_search").val(item_id);
+  $("#item_product_id").val(res.product_id ?? "");
+  $("#item_quantity").val(res.quantity ?? "");
+  $("#item_unit_price").val(res.price ?? res.unit_price ?? "");
+}
 
-    $("#retrieve_item-btn").click(function () {
-    const order_id = $("#order_id").val().trim();
-    const item_id = $("#item_id_search").val().trim();
+function clear_item_form_data() {
+  $("#item_id_search").val("");
+  $("#item_id").val("");
+  $("#item_product_id").val("");
+  $("#item_quantity").val("");
+  $("#item_unit_price").val("");
+}
 
-    if (!order_id) {
-      flash_message("Retrieve an order first (Order ID is required).");
-      return;
-    }
-    if (!item_id) {
-      flash_message("Item ID is required.");
-      return;
-    }
+function render_items(items) {
+  const $tbody = $("#items_table_body");
+  $tbody.empty();
 
-    $("#flash_message").empty();
+  if (!items || items.length === 0) {
+    $tbody.append(`<tr><td colspan="5"><em>No items found</em></td></tr>`);
+    return;
+  }
 
-    $.ajax({
-      type: "GET",
-      url: `/orders/${encodeURIComponent(order_id)}/orderitems/${encodeURIComponent(item_id)}`,
-      contentType: "application/json"
-    })
-    .done(function (res) {
-      update_item_form(res);
-      flash_message("Success");
-    })
-    .fail(function (res) {
-      flash_message(res.responseJSON?.message || "Item not found");
-    });
-  });
+  items.forEach((it) => {
+    const id = it.id ?? it.item_id ?? "";
+    const product_id = it.product_id ?? "";
+    const qty = it.quantity ?? "";
+    const price = it.price ?? it.unit_price ?? "";
+    const line = it.line_amount ?? it.line_total ?? "";
 
-
-  // DELETE ITEM
-  $("#delete_item-btn").click(function () {
-    const order_id = $("#order_id").val().trim();
-    const item_id = ($("#item_id_search").val() || $("#item_id").val() || "").trim();
-
-    if (!order_id) {
-      flash_message("Retrieve an order first (Order ID is required).");
-      return;
-    }
-    if (!item_id) {
-      flash_message("Item ID is required.");
-      return;
-    }
-
-    $("#flash_message").empty();
-
-    $.ajax({
-      type: "DELETE",
-      url: `/orders/${encodeURIComponent(order_id)}/orderitems/${encodeURIComponent(item_id)}`,
-      contentType: "application/json"
-    })
-    .done(function () {
-      clear_item_form_data();
-      list_items_for_current_order();
-      flash_message("Success");
-    })
-    .fail(function (res) {
-      flash_message(res.responseJSON?.message || "Failed to delete item");
-    });
-  });
-
-  //update item form
-  $("#update_item-btn").click(function () {
-    const order_id = $("#order_id").val().trim();
-    const item_id = $("#item_id").val().trim();
-
-    if (!order_id) {
-      flash_message("Retrieve an order first (Order ID is required).");
-      return;
-    }
-    if (!item_id) {
-      flash_message("Retrieve an item first (Item ID is required).");
-      return;
-    }
-
-    const product_id = $("#item_product_id").val().trim();
-    const quantity = parseInt($("#item_quantity").val(), 10);
-    const price = parseFloat($("#item_unit_price").val());
-
-    if (!product_id) {
-      flash_message("Product ID is required.");
-      return;
-    }
-    if (!Number.isInteger(quantity) || quantity <= 0) {
-      flash_message("Quantity must be a positive integer.");
-      return;
-    }
-    if (!Number.isFinite(price) || price < 0) {
-      flash_message("Unit Price must be a valid number >= 0.");
-      return;
-    }
-
-    $("#flash_message").empty();
-
-    const data = { 
-      order_id: parseInt(order_id, 10), 
-      product_id, 
-      quantity, 
-      price 
-    };
-
-    $.ajax({
-      type: "PUT",
-      url: `/orders/${encodeURIComponent(order_id)}/orderitems/${encodeURIComponent(item_id)}`,
-      contentType: "application/json",
-      data: JSON.stringify(data)
-    })
-    .done(function (res) {
-      update_item_form(res);
-      flash_message("Success");
-      list_items_for_current_order();
-    })
-    .fail(function (res) {
-      flash_message(res.responseJSON?.message || "Failed to update item");
-    });
-  });
-
-    ///LIST
-
-    function render_items(items) {
-      $("#items_table_body").empty();
-
-      items.forEach(function (it) {
-        const id = it.id ?? it.item_id ?? "";
-        const product_id = it.product_id ?? "";
-        const qty = it.quantity ?? "";
-        const price = it.price ?? it.unit_price ?? "";
-        const line = it.line_amount ?? it.line_total ?? "";
-
-        $("#items_table_body").append(`
+    $tbody.append(`
       <tr>
         <td>${id}</td>
         <td>${product_id}</td>
@@ -415,92 +317,160 @@ $(function () {
         <td>${line}</td>
       </tr>
     `);
-      });
-    }
+  });
+}
 
-    function list_items_for_current_order() {
-      const order_id = $("#order_id").val();
-      if (!order_id) return;
+function list_items_for_current_order() {
+  const order_id = ($("#order_id").val() || "").trim();
+  if (!order_id) {
+    render_items([]);
+    return;
+  }
 
-      $.ajax({
-        type: "GET",
-        url: `/orders/${order_id}/orderitems`, // <-- change to /items if that's your API
-        contentType: "application/json",
-      })
-        .done(function (res) {
-          render_items(res);
-        })
-        .fail(function () {
-          // optional: flash_message("Failed to list items");
-        });
-    }
-
-    $("#list_all_order_items-btn").click(function () {
-      list_items_for_current_order("");
-      flash_message(`Listed all order's items`);
+  $.ajax({
+    type: "GET",
+    url: `/orders/${encodeURIComponent(order_id)}/orderitems`,
+    contentType: "application/json",
+  })
+    .done((res) => render_items(Array.isArray(res) ? res : (res.items || [])))
+    .fail((res) => {
+      console.error("List items failed", res);
+      render_items([]);
     });
+}
 
+// Retrieve Item
+$("#retrieve_item-btn").on("click", function (e) {
+  e.preventDefault();
 
-    // ****************************************
-    // CREATE AN ORDER ITEM
-    // ****************************************
+  const order_id = ($("#order_id").val() || "").trim();
+  const item_id = ($("#item_id_search").val() || "").trim();
 
-    $("#create_item-btn").click(function () {
-    const order_id = parseInt($("#order_id").val(), 10);
-    const product_id = $("#item_product_id").val().trim();
-    const price = parseFloat($("#item_unit_price").val());
-    const quantity = parseInt($("#item_quantity").val(), 10);
+  if (!order_id) return flash_message("Retrieve an order first (Order ID is required).");
+  if (!item_id) return flash_message("Item ID is required.");
 
-    if (!order_id) {
-      flash_message("Create or Retrieve an order first (Order ID is required).");
-      return;
-    }
-    if (!product_id) {
-      flash_message("Product ID is required.");
-      return;
-    }
-    if (!Number.isFinite(price) || price < 0) {
-      flash_message("Unit Price must be a valid number >= 0.");
-      return;
-    }
-    if (!Number.isInteger(quantity) || quantity <= 0) {
-      flash_message("Quantity must be a positive integer.");
-      return;
-    }
+  $("#flash_message").empty();
 
-    $("#flash_message").empty();
-
-    const data = { order_id, product_id, price, quantity };
-
-    $.ajax({
-      type: "POST",
-      url: `/orders/${order_id}/orderitems`,
-      contentType: "application/json",
-      data: JSON.stringify(data)
+  $.ajax({
+    type: "GET",
+    url: `/orders/${encodeURIComponent(order_id)}/orderitems/${encodeURIComponent(item_id)}`,
+    contentType: "application/json",
+  })
+    .done((res) => {
+      update_item_form(res);
+      flash_message("Success");   // or "Success Retrieval" if your feature expects that
     })
-    .done(function (res) {
-      update_item_form(res);  // ← THIS WAS MISSING!
+    .fail((res) => flash_message(res.responseJSON?.message || "Item not found"));
+});
+
+// Create Item
+$("#create_item-btn").on("click", function (e) {
+  e.preventDefault();
+
+  const order_id = ($("#order_id").val() || "").trim();
+  const product_id = ($("#item_product_id").val() || "").trim();
+  const quantity = parseInt($("#item_quantity").val(), 10);
+  const price = parseFloat($("#item_unit_price").val());
+
+  if (!order_id) return flash_message("Create or Retrieve an order first (Order ID is required).");
+  if (!product_id) return flash_message("Product ID is required.");
+  if (!Number.isInteger(quantity) || quantity <= 0) return flash_message("Quantity must be a positive integer.");
+  if (!Number.isFinite(price) || price < 0) return flash_message("Unit Price must be a valid number >= 0.");
+
+  $("#flash_message").empty();
+
+  $.ajax({
+    type: "POST",
+    url: `/orders/${encodeURIComponent(order_id)}/orderitems`,
+    contentType: "application/json",
+    data: JSON.stringify({ product_id, quantity, price }),
+  })
+    .done((res) => {
+      update_item_form(res);
       flash_message("Item created");
       list_items_for_current_order();
     })
-    .fail(function (res) {
-      flash_message(res.responseJSON?.message || "Failed to create item");
-    });
-  });
+    .fail((res) => flash_message(res.responseJSON?.message || "Failed to create item"));
+});
 
-  function clear_item_form_data() {
-    $("#item_id_search").val("");
-    $("#item_id").val("");
-    $("#item_product_id").val("");
-    $("#item_quantity").val("");
-    $("#item_unit_price").val("");
-  }
+// Update Item
+$("#update_item-btn").on("click", function (e) {
+  e.preventDefault();
 
-  // Clear Item Form button
-  $("#clear_item-btn").click(function () {
-    clear_item_form_data();
-    flash_message("Item form cleared");
-  });
+  const order_id = ($("#order_id").val() || "").trim();
+  const item_id = ($("#item_id").val() || "").trim();
 
-  list_orders();
+  if (!order_id) return flash_message("Retrieve an order first (Order ID is required).");
+  if (!item_id) return flash_message("Retrieve an item first (Item ID is required).");
+
+  const product_id = ($("#item_product_id").val() || "").trim();
+  const quantity = parseInt($("#item_quantity").val(), 10);
+  const price = parseFloat($("#item_unit_price").val());
+
+  if (!product_id) return flash_message("Product ID is required.");
+  if (!Number.isInteger(quantity) || quantity <= 0) return flash_message("Quantity must be a positive integer.");
+  if (!Number.isFinite(price) || price < 0) return flash_message("Unit Price must be a valid number >= 0.");
+
+  $("#flash_message").empty();
+
+  $.ajax({
+    type: "PUT",
+    url: `/orders/${encodeURIComponent(order_id)}/orderitems/${encodeURIComponent(item_id)}`,
+    contentType: "application/json",
+    data: JSON.stringify({ product_id, quantity, price }),
+  })
+    .done((res) => {
+      update_item_form(res);
+      flash_message("Success");
+      list_items_for_current_order();
+    })
+    .fail((res) => flash_message(res.responseJSON?.message || "Failed to update item"));
+});
+
+// Delete Item
+$("#delete_item-btn").on("click", function (e) {
+  e.preventDefault();
+
+  const order_id = ($("#order_id").val() || "").trim();
+  const item_id = ($("#item_id_search").val() || $("#item_id").val() || "").trim();
+
+  if (!order_id) return flash_message("Retrieve an order first (Order ID is required).");
+  if (!item_id) return flash_message("Item ID is required.");
+
+  $("#flash_message").empty();
+
+  $.ajax({
+    type: "DELETE",
+    url: `/orders/${encodeURIComponent(order_id)}/orderitems/${encodeURIComponent(item_id)}`,
+    contentType: "application/json",
+  })
+    .done(() => {
+      clear_item_form_data();
+      flash_message("Success");
+      list_items_for_current_order();
+    })
+    .fail((res) => flash_message(res.responseJSON?.message || "Failed to delete item"));
+});
+
+// List All Items
+$("#list_all_order_items-btn").on("click", function (e) {
+  e.preventDefault();
+
+  const order_id = ($("#order_id").val() || "").trim();
+  if (!order_id) return flash_message("Retrieve an order first (Order ID is required).");
+
+  list_items_for_current_order();
+  flash_message("Listed all order's items");
+});
+
+// Clear Item Form
+$("#clear_item-btn").on("click", function (e) {
+  e.preventDefault();
+  clear_item_form_data();
+  flash_message("Item form cleared");
+});
+
+
+
+list_orders()
 });
