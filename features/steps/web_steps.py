@@ -163,7 +163,7 @@ def step_impl(context: Any, name: str) -> None:
 @then('I should see the message "{message}"')
 def step_impl(context: Any, message: str) -> None:
     # Uncomment next line to take a screenshot of the web page for debugging
-    # save_screenshot(context, message)
+    save_screenshot(context, message)
     found = WebDriverWait(context.driver, context.wait_seconds).until(
         expected_conditions.text_to_be_present_in_element(
             (By.ID, "flash_message"), message
