@@ -3,6 +3,20 @@ $(function () {
   //  U T I L I T Y   F U N C T I O N S
   // ****************************************
 
+  function refresh_current_order() {
+    const order_id = ($("#order_id").val() || "").trim();
+    if (!order_id) return;
+
+    return $.ajax({
+      type: "GET",
+      url: `/api/orders/${encodeURIComponent(order_id)}`,
+      contentType: "application/json",
+    }).done(function (res) {
+      update_form_data(res); // this will update total_amount 
+    });
+  }
+
+
   // Updates the form with data from the response
   function update_form_data(res) {
     $("#order_id").val(res.id);
@@ -12,6 +26,7 @@ $(function () {
     $("#created_at").val(res.created_at);
     $("#updated_at").val(res.updated_at);
   }
+
 
   /// Clears all form fields
   function clear_form_data() {
@@ -174,12 +189,11 @@ $(function () {
         url: `/api/orders/${encodeURIComponent(order_id)}`,
         contentType: "application/json",
       })
-        .done(function () {
+        .done(function() {
           clear_form_data();
           flash_message("Order has been Deleted!");
           list_orders();
-          update_form_data();
-          list_items_for_current_order();
+          
           
         })
         .fail(function (res) {
@@ -366,7 +380,7 @@ $(function () {
         .done(function () {
           flash_message("Item created");
           list_items_for_current_order();
-          update_form_data();
+          refresh_current_order();
           list_orders()
         })
         .fail(function (res) {
@@ -402,6 +416,8 @@ $("#delete_item-btn").on("click", function (e) {
         clear_item_form_data();
         flash_message("Item deleted from order");
         list_items_for_current_order();
+        refresh_current_order(); 
+        list_orders(); 
       })
       .fail((res) => flash_message(res.responseJSON?.message || "Failed to delete item"));
   });
@@ -441,8 +457,10 @@ $("#delete_item-btn").on("click", function (e) {
         .done((res) => {
           update_item_form(res);
           flash_message("Success");
-          list_orders();
           list_items_for_current_order();
+          refresh_current_order();
+          list_orders();
+          
         })
         .fail((res) => flash_message(res.responseJSON?.message || "Failed to update item"));
     });
