@@ -67,7 +67,7 @@ Scenario: Create an Order Item successfully
     And I press the "Create" button
     Then I should see the message "Success"
     When I copy the "order_id" field
-
+    And I press the "Toggle Order Items" button
     When I set the "item_product_id" to "SKU123"
     And I set the "item_quantity" to "2"
     And I set the "item_unit_price" to "19.99"
@@ -93,8 +93,6 @@ Scenario: List all orders for a customer
     And I should not see "1002" in the results
 
 
-
-
 Scenario: Delete an Order Item
     When I visit the "Home Page"
     And I set the "customer_id" to "1999"
@@ -111,4 +109,4 @@ Scenario: Delete an Order Item
     And I press the "Clear Item" button
     When I paste the "item_id_search" field
     And I press the "Delete Item" button
-    Then I should see the message "Success"
+    Then I should see the message "Item deleted from order"
