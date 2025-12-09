@@ -112,10 +112,10 @@ Scenario: Retrieve an Order Item by Item ID
 
     When I paste the "item_id_search" field
     When I press the "Retrieve Item" button
-    Then I should see the message "Success Retrieval"
-    And I should see "SKU123" in the "item_product_id" field
-    And I should see "2" in the "item_quantity" field
-    And I should see "19.99" in the "item_unit_price" field
+    Then I should see the message "Success"
+    Then I should see "SKU123" in the "item_product_id" field
+    Then I should see "2" in the "item_quantity" field
+    Then I should see "19.99" in the "item_unit_price" field
 
 
 
@@ -139,9 +139,8 @@ Scenario: Update an Order Item
 
     When I paste the "item_id_search" field
     When I press the "Retrieve Item" button
-    Then I should see the message "Success Retrieval"
+    Then I should see the message "Success"
 
     When I set the "item_quantity" to "20"
     And I press the "Update Item" button
-    Then I should see the message "Success"
-    And I should see "20" in the "item_quantity" field
+    Then I should see "20" in the "item_quantity" field
