@@ -37,30 +37,7 @@ $(function () {
     let customer_id = $("#customer_id").val();
     let order_status = $("#order_status").val();
     let now = new Date().toISOString();
-    // ****************************************
-    //  U T I L I T Y   F U N C T I O N S
-    // ****************************************
-
-    // Updates the form with data from the response
-    function update_form_data(res) {
-      $("#order_id").val(res.id);
-      $("#customer_id").val(res.customer_id);
-      $("#order_status").val(res.status);
-      $("#total_amount").val(res.total_amount);
-      $("#created_at").val(res.created_at);
-      $("#updated_at").val(res.updated_at);
-    }
-
-    /// Clears all form fields
-    function clear_form_data() {
-      $("#order_id").val("");
-      $("#customer_id").val("");
-      $("#order_status").val("CREATED");
-      $("#total_amount").val("");
-      $("#created_at").val("");
-      $("#updated_at").val("");
-    }
-
+    
     let data = {
       customer_id: customer_id,
       status: order_status,
@@ -77,50 +54,6 @@ $(function () {
       data: JSON.stringify(data),
     });
 
-    // ****************************************
-    // Update an Order
-    // ****************************************
-
-    $("#update-btn").click(function () {
-      let order_id = $("#order_id").val(); //this remains #order_id becasue this is the currently loaded order
-      let customer_id = $("#customer_id").val();
-      let order_status = $("#order_status").val();
-      let created_at = $("#created_at").val();
-
-      // Update the updated_at timestamp
-      let updated_at = new Date().toISOString();
-
-      let data = {
-        customer_id: customer_id,
-        status: order_status,
-        created_at: created_at,
-        updated_at: updated_at,
-      };
-
-      $("#flash_message").empty();
-
-      let ajax = $.ajax({
-        type: "PUT",
-        url: `/api/orders/${order_id}`,
-        contentType: "application/json",
-        data: JSON.stringify(data),
-      });
-
-      ajax.done(function (res) {
-        update_form_data(res);
-        flash_message("Success");
-        list_orders();
-      });
-
-      ajax.fail(function (res) {
-        flash_message(res.responseJSON.message);
-      });
-    });
-
-    ajax.fail(function (res) {
-      flash_message(res.responseJSON.message);
-    });
-  });
 
   // ****************************************
   // Update an Order
@@ -210,11 +143,7 @@ $(function () {
     }
   });
   $("#delete-btn").click(function () {
-    let order_id = $("#order_id_search").val().trim();
-    $("#flash_message").empty();
-
-    $("#delete-btn").click(function () {
-      let order_id = $("#order_id").val();
+      let order_id = $("#order_id_search").val();
 
       ajax.done(function (res) {
         clear_form_data();
@@ -238,10 +167,6 @@ $(function () {
         flash_message("Server error!");
       });
     });
-
-    // ****************************************
-    // Clear Form
-    // ****************************************
 
     // ****************************************
     // List ORDERS
@@ -305,12 +230,7 @@ $(function () {
     // ORDER ITEMS
     // ****************************************
 
-    // ****************************************
-    // ORDER ITEMS
-    // ****************************************
-
-    //RETRIEVE
-
+    //Udapte item form 
     function update_item_form(res) {
       const item_id = res.id ?? res.item_id ?? "";
       $("#item_id").val(item_id);
@@ -344,7 +264,6 @@ $(function () {
     });
 
     ///LIST
-
     function render_items(items) {
       $("#items_table_body").empty();
 
@@ -367,20 +286,21 @@ $(function () {
       });
     }
 
+    
     function list_items_for_current_order() {
       const order_id = $("#order_id").val();
       if (!order_id) return;
 
       $.ajax({
         type: "GET",
-        url: `/orders/${order_id}/orderitems`, // <-- change to /items if that's your API
+        url: `/api/orders/${order_id}/orderitems`, 
         contentType: "application/json",
       })
         .done(function (res) {
           render_items(res);
         })
         .fail(function () {
-          // optional: flash_message("Failed to list items");
+          flash_message("Failed to list items");
         });
     }
 
@@ -389,27 +309,7 @@ $(function () {
       flash_message(`Listed all order's items`);
     });
 
-    // ****************************************
-    // CREATE AN ORDER ITEM
-    // ****************************************
-
-    function list_items_for_current_order() {
-      const order_id = $("#order_id").val();
-      if (!order_id) return;
-
-      $.ajax({
-        type: "GET",
-        url: `/api/orders/${order_id}/orderitems`, // <-- change to /items if that's your API
-        contentType: "application/json",
-      })
-        .done(function (res) {
-          render_items(res);
-        })
-        .fail(function () {
-          // optional: flash_message("Failed to list items");
-        });
-    }
-
+    
     // ****************************************
     // CREATE AN ORDER ITEM
     // ****************************************
