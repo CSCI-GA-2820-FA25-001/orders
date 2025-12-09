@@ -58,7 +58,7 @@ Scenario: Delete an Order
     When I press the "Clear" button
     And I paste the "order_id_search" field
     And I press the "Delete" button
-    Then I should see the message "Success"
+    Then I should see the message "Order has been Deleted!"
 
 Scenario: Create an Order Item successfully
     When I visit the "Home Page"
