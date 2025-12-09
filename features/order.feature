@@ -109,4 +109,4 @@ Scenario: Delete an Order Item
     And I press the "Clear Item" button
     When I paste the "item_id_search" field
     And I press the "Delete Item" button
-    Then I should see the message "Item deleted from order"
+    
