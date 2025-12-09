@@ -249,7 +249,7 @@ $(function () {
 
       $.ajax({
         type: "GET",
-        url: `/orders/${encodeURIComponent(
+        url: `/api/orders/${encodeURIComponent(
           order_id,
         )}/orderitems/${encodeURIComponent(item_id)}`,
         contentType: "application/json",
