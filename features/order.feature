@@ -74,9 +74,6 @@ Scenario: Create an Order Item successfully
     And I press the "Create Item" button
     Then I should see the message "Item created"
 
-
-
-
 Scenario: List ALL Orders
     When I visit the "Home Page"
     And I press the "List All Orders" button
@@ -109,4 +106,25 @@ Scenario: Delete an Order Item
     And I press the "Clear Item" button
     When I paste the "item_id_search" field
     And I press the "Delete Item" button
-    
+
+
+Scenario: Update an Order Item
+    When I visit the "Home Page"
+    And I set the "customer_id" to "1999"
+    And I select "CREATED" in the "order_status" dropdown
+    And I press the "Create" button
+    Then I should see the message "Success"
+    When I press the "Toggle Order Items" button
+    And I set the "item_product_id" to "SKU123"
+    And I set the "item_quantity" to "2"
+    And I set the "item_unit_price" to "19.99"
+    And I press the "Create Item" button
+    Then I should see the message "Item created"
+    When I copy the "item_id" field
+    And I press the "Clear Item" button
+    Then the "item_id" field should be empty
+    When I paste the "item_id_search" field
+    And I press the "Retrieve Item" button
+    When I set the "item_quantity" to "20"
+    And I press the "Update Item" button
+    Then I should see "20" in the "item_quantity" field

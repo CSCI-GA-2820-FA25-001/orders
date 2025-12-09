@@ -178,6 +178,9 @@ $(function () {
           clear_form_data();
           flash_message("Order has been Deleted!");
           list_orders();
+          update_form_data();
+          list_items_for_current_order();
+          
         })
         .fail(function (res) {
           flash_message(res.responseJSON?.message || "Server error!");
@@ -363,6 +366,7 @@ $(function () {
         .done(function () {
           flash_message("Item created");
           list_items_for_current_order();
+          update_form_data();
           list_orders()
         })
         .fail(function (res) {
@@ -402,6 +406,46 @@ $("#delete_item-btn").on("click", function (e) {
       .fail((res) => flash_message(res.responseJSON?.message || "Failed to delete item"));
   });
 
+
+    // ****************************************
+    // UPDATE AN ORDER ITEM
+    // ****************************************
+
+
+
+  $("#update_item-btn").on("click", function (e) {
+      e.preventDefault();
+
+      const order_id = ($("#order_id").val() || "").trim();
+      const item_id = ($("#item_id").val() || "").trim();
+
+      if (!order_id) return flash_message("Retrieve an order first (Order ID is required).");
+      if (!item_id) return flash_message("Retrieve an item first (Item ID is required).");
+
+      const product_id = ($("#item_product_id").val() || "").trim();
+      const quantity = parseInt($("#item_quantity").val(), 10);
+      const price = parseFloat($("#item_unit_price").val());
+
+      if (!product_id) return flash_message("Product ID is required.");
+      if (!Number.isInteger(quantity) || quantity <= 0) return flash_message("Quantity must be a positive integer.");
+      if (!Number.isFinite(price) || price < 0) return flash_message("Unit Price must be a valid number >= 0.");
+
+      $("#flash_message").empty();
+
+      $.ajax({
+        type: "PUT",
+        url: `/api/orders/${encodeURIComponent(order_id)}/orderitems/${encodeURIComponent(item_id)}`,
+        contentType: "application/json",
+        data: JSON.stringify({ product_id, quantity, price }),
+      })
+        .done((res) => {
+          update_item_form(res);
+          flash_message("Success");
+          list_orders();
+          list_items_for_current_order();
+        })
+        .fail((res) => flash_message(res.responseJSON?.message || "Failed to update item"));
+    });
   function clear_item_form_data() {
     $("#item_id_search").val("");
     $("#item_id").val("");
