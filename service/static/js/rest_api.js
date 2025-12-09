@@ -379,28 +379,28 @@ $(function () {
 
   // Delete Item
 $("#delete_item-btn").on("click", function (e) {
-  e.preventDefault();
+    e.preventDefault();
 
-  const order_id = ($("#order_id").val() || "").trim();
-  const item_id = ($("#item_id_search").val() || $("#item_id").val() || "").trim();
+    const order_id = ($("#order_id").val() || "").trim();
+    const item_id = ($("#item_id_search").val() || $("#item_id").val() || "").trim();
 
-  if (!order_id) return flash_message("Retrieve an order first (Order ID is required).");
-  if (!item_id) return flash_message("Item ID is required.");
+    if (!order_id) return flash_message("Retrieve an order first (Order ID is required).");
+    if (!item_id) return flash_message("Item ID is required.");
 
-  $("#flash_message").empty();
+    $("#flash_message").empty();
 
-  $.ajax({
-    type: "DELETE",
-    url: `/api/orders/${encodeURIComponent(order_id)}/orderitems/${encodeURIComponent(item_id)}`,
-    contentType: "application/json",
-  })
-    .done(() => {
-      clear_item_form_data();
-      flash_message("Success");
-      list_items_for_current_order();
+    $.ajax({
+      type: "DELETE",
+      url: `/api/orders/${encodeURIComponent(order_id)}/orderitems/${encodeURIComponent(item_id)}`,
+      contentType: "application/json",
     })
-    .fail((res) => flash_message(res.responseJSON?.message || "Failed to delete item"));
-});
+      .done(() => {
+        clear_item_form_data();
+        flash_message("Item deleted from order");
+        list_items_for_current_order();
+      })
+      .fail((res) => flash_message(res.responseJSON?.message || "Failed to delete item"));
+  });
 
   function clear_item_form_data() {
     $("#item_id_search").val("");
