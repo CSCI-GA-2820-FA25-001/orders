@@ -39,198 +39,203 @@
             </div>
           </div> <!-- form horizontal -->
       
-        <div class="form-horizontal">
-
-
-        
-        <!-- Create/Update Order Form -->
-        <div class="well">
-          <h4>Create or Update an Order</h4>
           <div class="form-horizontal">
-            
-            <!-- Order ID (for updates) -->
-            <div class="form-group">
-              <label class="control-label col-sm-2" for="order_id">Order ID:</label>
-              <div class="col-sm-10">
-                <input type="text" class="form-control" id="order_id" placeholder="Auto-generated (read-only for updates)" readonly>
-              </div>
-            </div>
+            <!-- Create/Update Order Form -->
+            <div class="well">
+              <h4>Create or Update an Order</h4>
+              <div class="form-horizontal">
+                
+                <!-- Order ID (for updates) -->
+                <div class="form-group">
+                  <label class="control-label col-sm-2" for="order_id">Order ID:</label>
+                  <div class="col-sm-10">
+                    <input type="text" class="form-control" id="order_id" placeholder="Auto-generated (read-only for updates)" readonly>
+                  </div>
+                </div>
 
-            <!-- Customer ID -->
-            <div class="form-group">
-              <label class="control-label col-sm-2" for="customer_id">Customer ID:</label>
-              <div class="col-sm-10">
-                <input type="text" class="form-control" id="customer_id" placeholder="Enter customer ID">
-              </div>
-            </div>
+                <!-- Customer ID -->
+                <div class="form-group">
+                  <label class="control-label col-sm-2" for="customer_id">Customer ID:</label>
+                  <div class="col-sm-10">
+                    <input type="text" class="form-control" id="customer_id" placeholder="Enter customer ID">
+                  </div>
+                </div>
 
-            <!-- Status -->
-            <div class="form-group">
-              <label class="control-label col-sm-2" for="order_status">Status:</label>
-              <div class="col-sm-10">
-                <select class="form-control" id="order_status">
-                  <option value="CREATED" selected>CREATED</option>
-                  <option value="PAID" selected>PAID</option>
-                  <option value="SHIPPED">SHIPPED</option>
-                  <option value="FULFILLED">FULFILLED</option>
-                  <option value="CANCELED">CANCELED</option>
-                  <option value="REFUNDED">REFUNDED</option>
-                </select>
-              </div>
-            </div>
+                <!-- Status -->
+                <div class="form-group">
+                  <label class="control-label col-sm-2" for="order_status">Status:</label>
+                  <div class="col-sm-10">
+                    <select class="form-control" id="order_status">
+                      <option value="CREATED" selected>CREATED</option>
+                      <option value="PAID">PAID</option>
+                      <option value="SHIPPED">SHIPPED</option>
+                      <option value="FULFILLED">FULFILLED</option>
+                      <option value="CANCELED">CANCELED</option>
+                      <option value="REFUNDED">REFUNDED</option>
+                    </select>
+                  </div>
+                </div>
 
-            <!-- Created At (read-only) -->
-            <div class="form-group">
-              <label class="control-label col-sm-2" for="created_at">Created At:</label>
-              <div class="col-sm-10">
-                <input type="text" class="form-control" id="created_at" placeholder="Auto-generated" readonly>
-              </div>
-            </div>
+                <!-- Created At (read-only) -->
+                <div class="form-group">
+                  <label class="control-label col-sm-2" for="created_at">Created At:</label>
+                  <div class="col-sm-10">
+                    <input type="text" class="form-control" id="created_at" placeholder="Auto-generated" readonly>
+                  </div>
+                </div>
 
-            <!-- Updated At (read-only) -->
-            <div class="form-group">
-              <label class="control-label col-sm-2" for="updated_at">Updated At:</label>
-              <div class="col-sm-10">
-                <input type="text" class="form-control" id="updated_at" placeholder="Auto-generated" readonly>
-              </div>
-            </div>
+                <!-- Updated At (read-only) -->
+                <div class="form-group">
+                  <label class="control-label col-sm-2" for="updated_at">Updated At:</label>
+                  <div class="col-sm-10">
+                    <input type="text" class="form-control" id="updated_at" placeholder="Auto-generated" readonly>
+                  </div>
+                </div>
 
-            <!-- Total Amount (read-only, computed) -->
-            <div class="form-group">
-              <label class="control-label col-sm-2" for="total_amount">Total Amount:</label>
-              <div class="col-sm-10">
-                <input type="text" class="form-control" id="total_amount" placeholder="Computed from items" readonly>
-              </div>
-            </div>
+                <!-- Total Amount (read-only, computed) -->
+                <div class="form-group">
+                  <label class="control-label col-sm-2" for="total_amount">Total Amount:</label>
+                  <div class="col-sm-10">
+                    <input type="text" class="form-control" id="total_amount" placeholder="Computed from items" readonly>
+                  </div>
+                </div>
 
-            <!-- Order Action Buttons -->
-            <div class="form-group">
-              <div class="col-sm-offset-2 col-sm-10">
-                <button type="button" class="btn btn-success" id="create-btn">Create Order</button>
-                <button type="button" class="btn btn-warning" id="update-btn">Update Order</button>
-                <button type="button" class="btn btn-info" id="clear-btn">Clear Form</button>
-                <button type="button" class="btn btn-primary" id="list_all_orders-btn">List All Orders</button>
-                <button type="button" class="btn btn-default" id="list_by_customer-btn">List by Customer</button>
-              </div>
-            </div>
-          </div> <!-- form horizontal -->
+                <!-- Order Action Buttons -->
+                <div class="form-group">
+                  <div class="col-sm-offset-2 col-sm-10">
+                    <button
+                      type="button"
+                      class="btn btn-primary"
+                      data-toggle="collapse"
+                      data-target="#order_items_section"
+                      id="toggle_order_items-btn"
+                    >
+                     Manage Order Items 
+                    </button>
+                    <button type="button" class="btn btn-success" id="create-btn">Create Order</button>
+                    <button type="button" class="btn btn-warning" id="update-btn">Update Order</button>
+                    <button type="button" class="btn btn-info" id="clear-btn">Clear Form</button>
+                    <button type="button" class="btn btn-info" id="list_all_orders-btn">List All Orders</button>
+                    <button type="button" class="btn btn-info" id="list_by_customer-btn">List by Customer</button>
+                    
+                  </div>
+                </div>
+              </div> <!-- form horizontal -->
+            </div> <!-- end well -->
+          </div> <!-- end form horizontal -->
         </div> <!-- end well -->
       </div> <!-- end Form -->
 
-<!-- =========================
-     ORDER ITEMS Section
-     ========================= -->
-<div class="col-md-12" id="order_items_section">
-  <h3>Manage Order Items</h3>
-  <div class="well">
-    <p class="text-muted">
-      These actions apply to the Order ID shown above. (Create/Retrieve an order first.)
-    </p>
+      <!-- =========================
+           ORDER ITEMS Section
+           ========================= -->
+      <div class="col-md-12 collapse" id="order_items_section">
+        <h3>Manage Order Items</h3>
+        <div class="well">
+          <p class="text-muted">
+            These actions apply to the Order ID shown above. (Create/Retrieve an order first.)
+          </p>
 
-    <div class="form-horizontal">
-      <!-- Item ID Search -->
+          <div class="form-horizontal">
+            <!-- Item ID Search -->
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="item_id_search">Search for Item ID:</label>
+              <div class="col-sm-4">
+                <input type="text" class="form-control" id="item_id_search" placeholder="Enter item ID">
+              </div>
+              <div class="col-sm-4">
+                <button type="button" class="btn btn-primary" id="retrieve_item-btn">Retrieve Item</button>
+                <button type="button" class="btn btn-danger" id="delete_item-btn">Delete Item</button>
+              </div>
+            </div>
 
-      <div class="form-group">
-        <label class="control-label col-sm-2" for="item_id_search">Search for Item ID:</label>
-        <div class="col-sm-4">
-          <input type="text" class="form-control" id="item_id_search" placeholder="Enter item ID">
-        </div>
+            <!-- Loaded Item ID (readonly) -->
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="item_id">Item ID:</label>
+              <div class="col-sm-10">
+                <input
+                  type="text"
+                  class="form-control"
+                  id="item_id"
+                  placeholder="Auto-generated (blank when creating)"
+                  readonly
+                />
+              </div>
+            </div>
 
-        <div class="col-sm-4">
-          <button type="button" class="btn btn-primary" id="retrieve_item-btn">Retrieve Item</button>
-          <button type="button" class="btn btn-danger" id="delete_item-btn">Delete Item</button>
+            <!-- Product ID -->
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="item_product_id">Product ID:</label>
+              <div class="col-sm-10">
+                <input
+                  type="text"
+                  class="form-control"
+                  id="item_product_id"
+                  placeholder="Enter product ID (e.g., SKU123)"
+                />
+              </div>
+            </div>
+
+            <!-- Quantity -->
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="item_quantity">Quantity:</label>
+              <div class="col-sm-10">
+                <input
+                  type="number"
+                  class="form-control"
+                  id="item_quantity"
+                  min="1"
+                  step="1"
+                  placeholder="Enter quantity"
+                />
+              </div>
+            </div>
+
+            <!-- Unit Price -->
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="item_unit_price">Unit Price:</label>
+              <div class="col-sm-10">
+                <input
+                  type="number"
+                  class="form-control"
+                  id="item_unit_price"
+                  min="0"
+                  step="0.01"
+                  placeholder="Enter unit price (e.g., 19.99)"
+                />
+              </div>
+            </div>
+
+            <!-- Item action buttons -->
+            <div class="form-group">
+              <div class="col-sm-offset-2 col-sm-10">
+                <button type="button" class="btn btn-success" id="create_item-btn">Create Item</button>
+                <button type="button" class="btn btn-warning" id="update_item-btn">Update Item</button>
+                <button type="button" class="btn btn-info" id="clear_item-btn">Clear Item Form</button>
+                <button type="button" class="btn btn-primary" id="list_all_order_items-btn">List All Items</button>
+              </div>
+            </div>
+          </div>
+
+          <hr />
+
+          <!-- Items table -->
+          <div class="table-responsive">
+            <table class="table table-striped" id="items_table">
+              <thead>
+                <tr>
+                  <th class="col-md-2">Item ID</th>
+                  <th class="col-md-4">Product ID</th>
+                  <th class="col-md-2">Qty</th>
+                  <th class="col-md-2">Unit Price</th>
+                  <th class="col-md-2">Line Total</th>
+                </tr>
+              </thead>
+              <tbody id="items_table_body"></tbody>
+            </table>
+          </div>
         </div>
       </div>
-
-      <!-- Loaded Item ID (readonly) -->
-      <div class="form-group">
-        <label class="control-label col-sm-2" for="item_id">Item ID:</label>
-        <div class="col-sm-10">
-          <input
-            type="text"
-            class="form-control"
-            id="item_id"
-            placeholder="Auto-generated (blank when creating)"
-            readonly
-          />
-        </div>
-      </div>
-
-      <!-- Product ID -->
-      <div class="form-group">
-        <label class="control-label col-sm-2" for="item_product_id">Product ID:</label>
-        <div class="col-sm-10">
-          <input
-            type="text"
-            class="form-control"
-            id="item_product_id"
-            placeholder="Enter product ID (e.g., SKU123)"
-          />
-        </div>
-      </div>
-
-      <!-- Quantity -->
-      <div class="form-group">
-        <label class="control-label col-sm-2" for="item_quantity">Quantity:</label>
-        <div class="col-sm-10">
-          <input
-            type="number"
-            class="form-control"
-            id="item_quantity"
-            min="1"
-            step="1"
-            placeholder="Enter quantity"
-          />
-        </div>
-      </div>
-
-      <!-- Unit Price -->
-      <div class="form-group">
-        <label class="control-label col-sm-2" for="item_unit_price">Unit Price:</label>
-        <div class="col-sm-10">
-          <input
-            type="number"
-            class="form-control"
-            id="item_unit_price"
-            min="0"
-            step="0.01"
-            placeholder="Enter unit price (e.g., 19.99)"
-          />
-        </div>
-      </div>
-
-      <!-- Item action buttons (IMPORTANT: ids match Behave mapping) -->
-      <div class="form-group">
-        <div class="col-sm-offset-2 col-sm-10">
-          <button type="button" class="btn btn-success" id="create_item-btn">Create Item</button>
-          <button type="button" class="btn btn-warning" id="update_item-btn">Update Item</button>
-          <button type="button" class="btn btn-danger" id="delete_item-btn">Delete Item</button>
-          <button type="button" class="btn btn-info" id="clear_item-btn">Clear Item Form</button>
-          <button type="button" class="btn btn-primary" id="list_all_order_items-btn">List All Orders</button>
-          
-        </div>
-      </div>
-    </div>
-
-    <hr />
-
-    <!-- Items table -->
-    <div class="table-responsive">
-      <table class="table table-striped" id="items_table">
-        <thead>
-          <tr>
-            <th class="col-md-2">Item ID</th>
-            <th class="col-md-4">Product ID</th>
-            <th class="col-md-2">Qty</th>
-            <th class="col-md-2">Unit Price</th>
-            <th class="col-md-2">Line Total</th>
-          </tr>
-        </thead>
-        <tbody id="items_table_body"></tbody>
-      </table>
-    </div>
-  </div>
-</div>
 
       
       <!-- Search Results -->
@@ -252,23 +257,18 @@
         </table>
       </div>
 
-
-
       <footer>
         <br><br>
         <p>&copy; NYU DevOps Company 2022</p>
       </footer>
 
-
-
-      
     </div> <!-- end container -->
 
-  <script type="text/javascript" src = "static/js/jquery-3.6.0.min.js"></script>
-  <script type="text/javascript" src = "static/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="static/js/jquery-3.6.0.min.js"></script>
+    <script type="text/javascript" src="static/js/bootstrap.min.js"></script>
 
-  <!-- YOUR REST API -->
-  <script type="text/javascript" src="static/js/rest_api.js"></script>
+    <!-- YOUR REST API -->
+    <script type="text/javascript" src="static/js/rest_api.js"></script>
 
   </body>
 </html>
