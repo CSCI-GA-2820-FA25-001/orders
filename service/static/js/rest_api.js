@@ -16,6 +16,7 @@ $(function () {
   /// Clears all form fields
   function clear_form_data() {
     $("#order_id").val("");
+    $("#order_id_search").val("");
     $("#customer_id").val("");
     $("#order_status").val("CREATED");
     $("#total_amount").val("");
