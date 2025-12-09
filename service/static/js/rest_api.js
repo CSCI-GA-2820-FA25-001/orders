@@ -150,6 +150,7 @@ $(function () {
       ajax.done(function (res) {
         update_form_data(res);
         flash_message("Success");
+        list_items_for_current_order();
       });
 
       ajax.fail(function (res) {
@@ -362,12 +363,44 @@ $(function () {
         .done(function () {
           flash_message("Item created");
           list_items_for_current_order();
+          list_orders()
         })
         .fail(function (res) {
           flash_message(res.responseJSON?.message || "Failed to create item");
         });
   
   });
+
+
+
+    // ****************************************
+    // Delete AN ORDER ITEM
+    // ****************************************
+
+  // Delete Item
+$("#delete_item-btn").on("click", function (e) {
+  e.preventDefault();
+
+  const order_id = ($("#order_id").val() || "").trim();
+  const item_id = ($("#item_id_search").val() || $("#item_id").val() || "").trim();
+
+  if (!order_id) return flash_message("Retrieve an order first (Order ID is required).");
+  if (!item_id) return flash_message("Item ID is required.");
+
+  $("#flash_message").empty();
+
+  $.ajax({
+    type: "DELETE",
+    url: `/api/orders/${encodeURIComponent(order_id)}/orderitems/${encodeURIComponent(item_id)}`,
+    contentType: "application/json",
+  })
+    .done(() => {
+      clear_item_form_data();
+      flash_message("Success");
+      list_items_for_current_order();
+    })
+    .fail((res) => flash_message(res.responseJSON?.message || "Failed to delete item"));
+});
 
   function clear_item_form_data() {
     $("#item_id_search").val("");
