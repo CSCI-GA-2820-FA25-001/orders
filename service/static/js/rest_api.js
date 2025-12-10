@@ -222,6 +222,11 @@ $(function () {
         const total = order.total_amount ?? "";
         const created = order.created_at ?? "";
 
+        //only show cancel button if status is CREATED
+        const cancelBtn = status === "CREATED" 
+      ? `<button class="btn btn-sm btn-warning cancel-order-btn" data-order-id="${id}">Cancel</button>`
+      : `<span class="text-muted">-</span>`;
+
         $tbody.append(`
       <tr>
         <td>${id}</td>
@@ -229,7 +234,7 @@ $(function () {
         <td>${status}</td>
         <td>${total}</td>
         <td>${created}</td>
-        <td></td>
+        <td>${cancelBtn}</td>
       </tr>
     `);
       });
@@ -476,6 +481,34 @@ $("#delete_item-btn").on("click", function (e) {
   $("#clear_item-btn").click(function () {
     clear_item_form_data();
     flash_message("Item form cleared");
+  });
+
+  // ****************************************
+  // Cancel an Order
+  // ****************************************
+
+  $(document).on("click", ".cancel-order-btn", function () {
+    const order_id = $(this).data("order-id");
+  
+    if (!confirm(`Are you sure you want to cancel order ${order_id}?`)) {
+      return;
+    }
+
+    $("#flash_message").empty();
+
+    $.ajax({
+      type: "PUT",
+      url: `/api/orders/${order_id}/cancel`,
+      contentType: "application/json",
+    })
+      .done(function (res) {
+        flash_message(`Order ${order_id} has been cancelled!`);
+        list_orders();
+      })
+      .fail(function (res) {
+        const errorMsg = res.responseJSON?.message || "Failed to cancel order";
+        flash_message(errorMsg);
+      });
   });
 
   list_orders();
