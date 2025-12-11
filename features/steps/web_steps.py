@@ -26,6 +26,7 @@ For information on Waiting until elements are present in the HTML see:
 """
 import re
 import logging
+import time
 from typing import Any
 from behave import when, then  # pylint: disable=no-name-in-module
 from selenium.webdriver.common.by import By
@@ -199,3 +200,80 @@ def step_impl(context: Any, element_name: str, text_string: str) -> None:
     )
     element.clear()
     element.send_keys(text_string)
+
+
+@when('I press the "{button_name}" button for the first order')
+def step_impl(context, button_name):
+    """Press a button in the first row of the orders table"""
+    button_mapping = {"Cancel": "cancel-order-btn"}
+
+    button_class = button_mapping.get(
+        button_name, button_name.lower().replace(" ", "-") + "-btn"
+    )
+
+    wait = WebDriverWait(context.driver, 2)
+    max_retries = 5
+    for attempt in range(max_retries):
+        try:
+            element = wait.until(
+                expected_conditions.presence_of_element_located(
+                    (By.CLASS_NAME, button_class)
+                )
+            )
+            context.driver.execute_script("arguments[0].click();", element)
+            break
+        except Exception as e:
+            if attempt == max_retries - 1:
+                raise
+            time.sleep(0.5)
+
+    if button_name == "Cancel":
+        alert = WebDriverWait(context.driver, context.wait_seconds).until(
+            expected_conditions.alert_is_present()
+        )
+        alert.accept()
+
+
+@then('I should see "{button_text}" button for orders with "{status}" status')
+def step_impl(context, button_text, status):
+    """Verify that cancel button appears for orders with specific status"""
+    wait = WebDriverWait(context.driver, context.wait_seconds)
+
+    wait.until(
+        expected_conditions.presence_of_element_located((By.ID, "orders_table_body"))
+    )
+
+    rows = context.driver.find_elements(By.CSS_SELECTOR, "#orders_table_body tr")
+    found_button = False
+
+    for row in rows:
+        cells = row.find_elements(By.TAG_NAME, "td")
+        if len(cells) >= 6 and status in cells[2].text:
+            actions_cell = cells[5]
+            buttons = actions_cell.find_elements(By.CLASS_NAME, "cancel-order-btn")
+            if len(buttons) > 0:
+                found_button = True
+                break
+
+    assert found_button, f"Did not find {button_text} button for {status} status"
+
+
+@then('I should not see "{button_text}" button for orders with "{status}" status')
+def step_impl(context, button_text, status):
+    """Verify that cancel button does not appear for orders with specific status"""
+    wait = WebDriverWait(context.driver, context.wait_seconds)
+
+    wait.until(
+        expected_conditions.presence_of_element_located((By.ID, "orders_table_body"))
+    )
+
+    rows = context.driver.find_elements(By.CSS_SELECTOR, "#orders_table_body tr")
+
+    for row in rows:
+        cells = row.find_elements(By.TAG_NAME, "td")
+        if len(cells) >= 6 and status in cells[2].text:
+            actions_cell = cells[5]
+            buttons = actions_cell.find_elements(By.CLASS_NAME, "cancel-order-btn")
+            assert (
+                len(buttons) == 0
+            ), f"Found unexpected {button_text} button for {status} status"

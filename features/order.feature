@@ -128,3 +128,24 @@ Scenario: Update an Order Item
     When I set the "item_quantity" to "20"
     And I press the "Update Item" button
     Then I should see "20" in the "item_quantity" field
+
+
+Scenario: Cancel an Order
+    When I visit the "Home Page"
+    And I set the "customer_id" to "1001"
+    And I select "CREATED" in the "order_status" dropdown
+    And I press the "Create" button
+    Then I should see the message "Success"
+    When I press the "List All Orders" button
+    And I press the "Cancel" button for the first order
+    Then I should see the message "has been cancelled"
+    When I press the "List All Orders" button
+    Then I should see "CANCELED" in the results
+
+
+Scenario: Cancel Order Button Only Shows for CREATED Status
+    When I visit the "Home Page"
+    And I press the "List All Orders" button
+    Then I should see "Cancel" button for orders with "CREATED" status
+    And I should not see "Cancel" button for orders with "CANCELED" status
+    And I should not see "Cancel" button for orders with "SHIPPED" status
