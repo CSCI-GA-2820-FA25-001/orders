@@ -34,8 +34,8 @@ spec:
           - name: DATABASE_URI
             valueFrom:
               secretKeyRef:
-                name: postgres-creds
-                key: database-uri
+                name: orders-creds #postgres-creds
+                key: database-uri       #I think this has to match the secret? IDk 
         readinessProbe:
           initialDelaySeconds: 30
           periodSeconds: 60
