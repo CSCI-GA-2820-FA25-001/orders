@@ -1,0 +1,156 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: cd-pipeline
+spec:
+  params:
+    - description: The URL to the git repo
+      name: GIT_REPO
+      type: string
+    - default: master
+      description: The reference (branch or ref)
+      name: GIT_REF
+      type: string
+    - default: orders
+      description: Name of the application
+      name: APP_NAME
+      type: string
+    - default: 'image-registry.openshift-image-registry.svc:5000/$(context.pipelineRun.namespace)/$(params.APP_NAME):latest'
+      description: The name of the image to build
+      name: IMAGE_NAME
+      type: string
+  tasks:
+    - name: git-clone
+      params:
+        - name: CRT_FILENAME
+          value: ca-bundle.crt
+        - name: HTTP_PROXY
+          value: ''
+        - name: HTTPS_PROXY
+          value: ''
+        - name: NO_PROXY
+          value: ''
+        - name: SUBDIRECTORY
+          value: ''
+        - name: USER_HOME
+          value: /home/git
+        - name: DELETE_EXISTING
+          value: 'true'
+        - name: VERBOSE
+          value: 'false'
+        - name: SSL_VERIFY
+          value: 'true'
+        - name: URL
+          value: $(params.GIT_REPO)
+        - name: REVISION
+          value: $(params.GIT_REF)
+        - name: REFSPEC
+          value: ''
+        - name: SUBMODULES
+          value: 'true'
+        - name: DEPTH
+          value: '1'
+        - name: SPARSE_CHECKOUT_DIRECTORIES
+          value: ''
+      taskRef:
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: git-clone
+          - name: namespace
+            value: openshift-pipelines
+        resolver: cluster
+      workspaces:
+        - name: output
+          workspace: pipeline-workspace
+    - name: pylint
+      params:
+        - name: image
+          value: 'quay.io/rofrano/python:3.11-slim'
+        - name: path
+          value: service
+        - name: args
+          value: []
+        - name: requirements-file
+          value: requirements.txt
+      runAfter:
+        - git-clone
+      taskRef:
+        kind: Task
+        name: pylint
+      workspaces:
+        - name: source
+          workspace: pipeline-workspace
+    - name: testing
+      params:
+        - name: pytest-args
+          value: []
+        - name: secret-name
+          value: orders-creds
+        - name: secret-key
+          value: database-uri
+      runAfter:
+        - git-clone
+      taskRef:
+        kind: Task
+        name: pytest-env
+      workspaces:
+        - name: source
+          workspace: pipeline-workspace
+    - name: buildah
+      params:
+        - name: IMAGE
+          value: $(params.IMAGE_NAME)
+        - name: DOCKERFILE
+          value: ./Dockerfile
+        - name: BUILD_ARGS
+          value:
+            - ''
+        - name: CONTEXT
+          value: .
+        - name: STORAGE_DRIVER
+          value: vfs
+        - name: FORMAT
+          value: oci
+        - name: BUILD_EXTRA_ARGS
+          value: ''
+        - name: PUSH_EXTRA_ARGS
+          value: ''
+        - name: SKIP_PUSH
+          value: 'false'
+        - name: TLS_VERIFY
+          value: 'true'
+        - name: VERBOSE
+          value: 'false'
+      runAfter:
+        - pylint
+        - testing
+      taskRef:
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: buildah
+          - name: namespace
+            value: openshift-pipelines
+        resolver: cluster
+      workspaces:
+        - name: source
+          workspace: pipeline-workspace
+    - name: deploy-image
+      params:
+        - name: image-name
+          value: $(params.IMAGE_NAME)
+        - name: manifest-dir
+          value: k8s
+      runAfter:
+        - buildah
+      taskRef:
+        kind: Task
+        name: deploy-image
+      workspaces:
+        - name: source
+          workspace: pipeline-workspace
+  workspaces:
+    - name: pipeline-workspace
