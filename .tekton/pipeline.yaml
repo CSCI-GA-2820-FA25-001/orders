@@ -152,5 +152,14 @@ spec:
       workspaces:
         - name: source
           workspace: pipeline-workspace
+    - name: behave
+      runAfter:
+        - deploy-image
+      taskRef:
+        kind: Task
+        name: behave
+      workspaces:
+        - name: source
+          workspace: pipeline-workspace
   workspaces:
     - name: pipeline-workspace
